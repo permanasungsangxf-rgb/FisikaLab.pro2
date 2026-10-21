@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhysicLab: Kuis Konsep Fisika & Tokoh Pelopor Realtime</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            min-height: 100vh;
+            color: #f8fafc;
+        }
+        .font-game {
+            font-family: 'Fredoka', cursive;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .glass-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            transition: all 0.2s ease;
+        }
+        .glass-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }
+        .glass-btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+        .pulse-glow {
+            animation: pulse-animation 2s infinite;
+        }
+        @keyframes pulse-animation {
+            0% { box-shadow: 0 0 0 0px rgba(129, 140, 248, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(129, 140, 248, 0); }
+            100% { box-shadow: 0 0 0 0px rgba(129, 140, 248, 0); }
+        }
+        .answer-btn {
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4f46e5;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="p-3 md:p-6 flex flex-col justify-between min-h-screen">
+
+    <header class="max-w-6xl mx-auto w-full flex justify-between items-center mb-6 glass-card p-4 rounded-2xl shadow-xl">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-xl font-bold font-game shadow-lg">
+                <i class="fa-solid fa-atom text-yellow-300 animate-spin" style="animation-duration: 8s;"></i>
+            </div>
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold font-game tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400">PhysicLab Live!</h1>
+                <p class="text-xs text-slate-400">20 Konsep Fisika & Tokoh Pelopor Dunia</p>
+            </div>
+        </div>
+        <div id="room-code-badge" class="hidden flex items-center bg-indigo-950/80 border border-indigo-500/30 px-3.5 py-1.5 rounded-xl shadow-inner">
+            <span class="text-xs text-indigo-300 mr-2">Kode Ruangan:</span>
+            <span id="display-room-code" class="font-mono text-lg font-bold text-yellow-400 tracking-wider">------</span>
+        </div>
+    </header>
+
+    <!-- Custom Toast Message Notification -->
+    <div id="toast-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden bg-rose-600 text-white px-6 py-3 rounded-2xl shadow-2xl font-bold text-sm flex items-center space-x-2 border border-rose-400 transition-all">
+        <i id="toast-icon" class="fa-solid fa-circle-exclamation text-lg"></i>
+        <span id="toast-text">Pesan pemberitahuan...</span>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-6xl mx-auto w-full flex-grow flex items-center justify-center">
+
+        <!-- VIEW 1: LOBBY -->
+        <div id="view-lobby" class="w-full max-w-lg glass-card p-6 md:p-8 rounded-3xl shadow-2xl text-center space-y-6">
+            <div class="inline-block p-4 bg-indigo-500/10 rounded-full mb-1">
+                <i class="fa-solid fa-graduation-cap text-5xl text-indigo-400 animate-bounce"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl md:text-3xl font-bold font-game">Kuis Konsep & Tokoh Fisika</h2>
+                <p class="text-slate-300 text-xs md:text-sm mt-1">Uji pemahaman konsep dasar fisika & kenali para ilmuwan pelopornya tanpa hitungan rumus!</p>
+            </div>
+
+            <div class="space-y-4 pt-2">
+                <input type="text" id="player-name-input" placeholder="Masukkan Nama Kamu..." maxlength="15" 
+                    class="w-full px-5 py-3.5 rounded-xl bg-slate-800/90 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-all text-center text-lg font-semibold">
+                
+                <div class="flex items-center space-x-2">
+                    <input type="text" id="room-code-input" placeholder="KODE RUANGAN" maxlength="6"
+                        class="w-2/3 px-4 py-3.5 rounded-xl bg-slate-800/90 border border-slate-700 text-yellow-400 placeholder-slate-500 focus:outline-none focus:border-indigo-500 uppercase font-mono text-center tracking-widest text-lg font-bold">
+                    <button id="btn-join-room" onclick="joinRoom()" class="w-1/3 py-3.5 glass-btn rounded-xl font-bold text-white flex items-center justify-center space-x-1">
+                        <span>Masuk</span>
+                        <i class="fa-solid fa-right-to-bracket text-sm"></i>
+                    </button>
+                </div>
+
+                <div class="relative flex py-1 items-center">
+                    <div class="flex-grow border-t border-slate-700"></div>
+                    <span class="flex-shrink mx-4 text-slate-500 text-xs uppercase tracking-wider font-semibold">atau</span>
+                    <div class="flex-grow border-t border-slate-700"></div>
+                </div>
+
+                <button id="btn-create-room" onclick="createRoom()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span>Buat Ruangan Baru (Guru / Host)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- VIEW 2: WAITING ROOM -->
+        <div id="view-waiting" class="hidden w-full max-w-2xl glass-card p-6 md:p-8 rounded-3xl shadow-2xl text-center space-y-6">
+            <div class="space-y-2">
+                <span class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs px-3 py-1 rounded-full uppercase font-bold tracking-wider">Ruangan Siap</span>
+                <h2 class="text-xl md:text-2xl font-bold font-game">Kode Masuk Ruangan Kuis:</h2>
+                
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-3 pt-2">
+                    <div class="bg-slate-900/90 px-8 py-3 rounded-2xl border-2 border-yellow-500/50 shadow-inner">
+                        <span id="waiting-room-code" class="text-4xl md:text-6xl font-mono font-extrabold text-yellow-400 tracking-widest">------</span>
+                    </div>
+                    <div class="flex sm:flex-col gap-2">
+                        <button onclick="copyRoomCode()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-white font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-md">
+                            <i class="fa-solid fa-copy"></i>
+                            <span>Salin Kode</span>
+                        </button>
+                        <button onclick="copyShareLink()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 hover:text-white font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all">
+                            <i class="fa-solid fa-share-nodes"></i>
+                            <span>Salin Link</span>
+                        </button>
+                    </div>
+                </div>
+                <p class="text-slate-400 text-xs pt-1">Siswa dapat mengetik kode di atas atau menggunakan link langsung untuk bergabung!</p>
+            </div>
+
+            <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
+                <h3 class="text-sm font-semibold text-slate-400 mb-3 flex items-center justify-center">
+                    <i class="fa-solid fa-users text-indigo-400 mr-2"></i>
+                    Siswa Berpartisipasi (<span id="player-count">0</span>)
+                </h3>
+                <div id="players-list" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                </div>
+            </div>
+
+            <div id="host-controls" class="hidden pt-2">
+                <button id="btn-start-game" onclick="startGame()" class="w-full py-4 glass-btn rounded-xl text-lg font-bold text-white shadow-xl flex items-center justify-center space-x-2 pulse-glow">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Mulai Kuis Sekarang!</span>
+                </button>
+            </div>
+            <p id="non-host-msg" class="text-indigo-300 text-sm italic animate-pulse">Menunggu Host memulai permainan...</p>
+        </div>
+
+        <!-- VIEW 3: GAMEPLAY -->
+        <div id="view-game" class="hidden w-full grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            
+            <!-- Kolom Kiri: Visualisasi & Profil Tokoh -->
+            <div class="lg:col-span-1 glass-card p-5 rounded-3xl flex flex-col items-center justify-center space-y-4">
+                <div class="w-full flex justify-between items-center text-xs font-semibold text-slate-400">
+                    <span class="flex items-center"><i class="fa-solid fa-vial text-indigo-400 mr-1.5"></i> Visual Konsep</span>
+                    <span id="quiz-progress-text" class="text-indigo-300 font-bold">Soal 1 / 20</span>
+                </div>
+                
+                <div id="visual-container" class="w-full h-56 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-800 flex items-center justify-center">
+                    <canvas id="physics-canvas" class="w-full h-full"></canvas>
+                    <div id="visual-caption" class="absolute bottom-2 left-2 right-2 bg-slate-900/80 backdrop-blur-sm p-1.5 rounded-xl text-center text-[11px] text-indigo-200 border border-slate-700/50">
+                        Simulasi Interaktif Konsep
+                    </div>
+                </div>
+
+                <!-- Card Tokoh Fisikawan -->
+                <div class="w-full bg-gradient-to-br from-indigo-950/80 to-slate-900/90 p-3.5 rounded-2xl border border-indigo-500/30 text-xs text-slate-300 space-y-1.5 shadow-md">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-yellow-300 flex items-center text-xs">
+                            <i class="fa-solid fa-user-ninja text-indigo-400 mr-1.5"></i> Tokoh Pelopor:
+                        </span>
+                        <span id="scientist-era" class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30">Abad 17</span>
+                    </div>
+                    <p id="scientist-name" class="font-bold text-sm text-white">Sir Isaac Newton</p>
+                    <p id="scientist-desc" class="text-slate-400 text-[11px] leading-relaxed">Merumuskan Hukum Gerak & Gravitasi Semesta yang menjadi dasar mekanika klasik.</p>
+                </div>
+            </div>
+
+            <!-- Kolom Tengah & Kanan: Pertanyaan & Pilihan -->
+            <div class="lg:col-span-2 glass-card p-6 rounded-3xl space-y-6">
+                <!-- Timer Bar -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Sisa Waktu Jawab</span>
+                        <span id="timer-text" class="text-lg font-mono font-bold text-yellow-400">20s</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                        <div id="timer-bar" class="bg-gradient-to-r from-emerald-500 via-yellow-500 to-red-500 h-full w-full transition-all duration-200 ease-linear"></div>
+                    </div>
+                </div>
+
+                <!-- Pertanyaan -->
+                <div class="space-y-2">
+                    <h3 id="question-text" class="text-lg md:text-xl font-bold font-game leading-snug">
+                        Memuat pertanyaan fisika konseptual...
+                    </h3>
+                </div>
+
+                <!-- Pilihan Jawaban -->
+                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                </div>
+
+                <!-- Feedback Pesan -->
+                <div id="feedback-box" class="hidden p-4 rounded-2xl text-center font-bold text-sm transition-all shadow-lg"></div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: LEADERBOARD -->
+        <div id="view-leaderboard" class="hidden w-full max-w-2xl glass-card p-6 md:p-8 rounded-3xl shadow-2xl text-center space-y-6">
+            <div class="space-y-2">
+                <i class="fa-solid fa-trophy text-5xl text-yellow-400 animate-bounce"></i>
+                <h2 id="leaderboard-title" class="text-3xl font-bold font-game">Papan Skor Real-Time</h2>
+                <p id="leaderboard-subtitle" class="text-slate-300 text-sm">Peringkat pemahaman konsep fisika & tokoh ilmuwan!</p>
+            </div>
+
+            <!-- Panel Kunci Jawaban Khusus Host -->
+            <div id="host-answer-key-panel" class="hidden bg-indigo-950/80 border border-indigo-500/40 p-4 rounded-2xl text-left space-y-2 shadow-inner">
+                <div class="flex items-center justify-between text-xs text-yellow-300 font-bold">
+                    <span class="flex items-center"><i class="fa-solid fa-key mr-2 text-yellow-400"></i> Kunci Jawaban Soal (Khusus Host)</span>
+                    <span id="host-key-question-num" class="bg-indigo-900 px-2 py-0.5 rounded text-indigo-200">Soal #1</span>
+                </div>
+                <div id="host-key-options-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                </div>
+            </div>
+
+            <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden text-left shadow-inner">
+                <div class="grid grid-cols-12 bg-slate-800/80 p-3 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <span class="col-span-2 text-center">Pos</span>
+                    <span class="col-span-7">Nama Siswa</span>
+                    <span class="col-span-3 text-right">Skor Total</span>
+                </div>
+                <div id="leaderboard-list" class="divide-y divide-slate-800/60 max-h-64 overflow-y-auto">
+                </div>
+            </div>
+
+            <div id="next-question-host-control" class="hidden pt-2">
+                <button id="btn-next-question" onclick="nextQuestion()" class="w-full py-4 glass-btn rounded-xl text-lg font-bold text-white shadow-xl flex items-center justify-center space-x-2">
+                    <span>Lanjut Ke Soal Berikutnya</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+            <p id="next-question-wait-msg" class="text-indigo-300 text-sm italic animate-pulse">Menunggu Host melanjutkan ke soal berikutnya...</p>
+            
+            <div id="game-over-controls" class="hidden space-y-3 pt-2">
+                <button onclick="resetRoom()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span>Main Lagi (Kode Ruangan Diperbarui Otomatis)</span>
+                </button>
+                <button onclick="leaveRoom()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition-all">
+                    Kembali ke Menu Utama
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'physiclab-quiz-v2';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : { apiKey: "demo", authDomain: "demo.firebaseapp.com", projectId: "demo" };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let currentRoomCode = null;
+        let isHost = false;
+        let roomUnsubscribe = null;
+        let timerInterval = null;
+        let hasAnsweredCurrentQuestion = false;
+        let isActionPending = false;
+        let currentDisplayedQIndex = -1;
+        const QUESTION_DURATION = 20;
+
+        function showToast(message, isError = true) {
+            const toast = document.getElementById('toast-message');
+            const toastText = document.getElementById('toast-text');
+            const toastIcon = document.getElementById('toast-icon');
+            if(!toast || !toastText) return;
+            
+            toastText.innerText = message;
+            toastIcon.className = isError ? "fa-solid fa-circle-exclamation text-lg" : "fa-solid fa-circle-check text-lg";
+            toast.className = `fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-${isError ? 'rose' : 'emerald'}-600 text-white px-6 py-3 rounded-2xl shadow-2xl font-bold text-sm flex items-center space-x-2 border border-${isError ? 'rose' : 'emerald'}-400 transition-all`;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3500);
+        }
+
+        const quizBank = [
+            {
+                id: 1,
+                question: "Ketika kamu menumpang mobil yang tiba-tiba mengerem mendadak, tubuhmu akan terdorong ke depan secara otomatis. Siapakah fisikawan yang merumuskan sifat kelembaman (inersia) ini?",
+                options: [
+                    "Sir Isaac Newton",
+                    "Albert Einstein",
+                    "Galileo Galilei",
+                    "Nikola Tesla"
+                ],
+                correct: 0,
+                tip: "Gaya netral nol mempertahankan keadaan gerak benda (Hukum I Newton).",
+                scientist: "Sir Isaac Newton",
+                era: "Abad 17-18",
+                desc: "Bapak Fisika Klasik yang merumuskan Hukum Gerak & Gravitasi Semesta.",
+                type: "inertia"
+            },
+            {
+                id: 2,
+                question: "Siapakah ilmuwan Italia yang mematahkan mitos Aristoteles dengan membuktikan bahwa semua benda jatuh bebas dengan percepatan sama tanpa terpengaruh beratnya (jika mengabaikan gesekan udara)?",
+                options: [
+                    "Galileo Galilei",
+                    "Archimedes",
+                    "Michael Faraday",
+                    "Johannes Kepler"
+                ],
+                correct: 0,
+                tip: "Eksperimen menjatuhkan bola dari Menara Pisa membuktikan gravitasi menarik semua massa secara setara.",
+                scientist: "Galileo Galilei",
+                era: "Abad 16-17",
+                desc: "Bapak Sains Modern yang menggunakan teleskop untuk pengamatan astronomi.",
+                type: "freefall"
+            },
+            {
+                id: 3,
+                question: "Mengapa batu kapal yang sangat berat buatan baja bisa terapung di lautan, sedangkan kerikil kecil justru tenggelam? Konsep penemuan siapa ini?",
+                options: [
+                    "Hukum Gaya Apung Archimedes",
+                    "Teori Relativitas Einstein",
+                    "Hukum Listrik Faraday",
+                    "Efek Kuantum Niels Bohr"
+                ],
+                correct: 0,
+                tip: "Kapal memindahkan volume air yang menghasilkan gaya ke atas lebih besar dari total berat kapal.",
+                scientist: "Archimedes dari Sirakusa",
+                era: "Yunani Kuno (287 SM)",
+                desc: "Matematikawan & penemu Yunani Kuno yang terkenal dengan seruan 'Eureka!'.",
+                type: "buoyancy"
+            },
+            {
+                id: 4,
+                question: "Mengapa astronot di Stasiun Luar Angkasa Internasional (ISS) tampak mengapung tanpa bobot, padahal gravitasi bumi di sana masih ada sekitar 90%?",
+                options: [
+                    "Karena ISS dan astronot sama-sama jatuh bebas mengelilingi Bumi secara terus-menerus",
+                    "Karena tidak ada udara sama sekali di luar angkasa",
+                    "Karena pakaian astronot mengandung gas helium anti-gravitasi",
+                    "Karena medan magnet bumi menolak pakaian astronot"
+                ],
+                correct: 0,
+                tip: "Mengorbit sebenarnya adalah kondisi 'jatuh terus-menerus melengkung mengikuti bentuk Bumi'.",
+                scientist: "Albert Einstein",
+                era: "Abad 20",
+                desc: "Pencetus Teori Relativitas yang menjelaskan gravitasi sebagai kelengkungan ruang-waktu.",
+                type: "orbit"
+            },
+            {
+                id: 5,
+                question: "Siapakah tokoh pencetus Hukum Induksi Elektromagnetik yang memungkinkan pembangkit listrik (generator & dinamo) mengubah gerak menjadi energi listrik?",
+                options: [
+                    "Michael Faraday",
+                    "Thomas Edison",
+                    "James Watt",
+                    "Lord Kelvin"
+                ],
+                correct: 0,
+                tip: "Perubahan medan magnet yang menembus kumparan akan menghasilkan arus listrik induksi.",
+                scientist: "Michael Faraday",
+                era: "Abad 19",
+                desc: "Ilmuwan otodidak Inggris penemu induksi elektromagnetik & pembuat motor listrik pertama.",
+                type: "induction"
+            },
+            {
+                id: 6,
+                question: "Jika kamu memotong sebuah magnet batang persis di tengah menjadi dua bagian, apa yang akan terjadi pada kedua potongan magnet tersebut?",
+                options: [
+                    "Terbentuk 2 magnet baru yang masing-masing tetap punya Kutub Utara dan Selatan",
+                    "Satu potongan menjadi kutub Utara saja, potongan lain menjadi kutub Selatan saja",
+                    "Sifat kemagnetannya hilang sepenuhnya secara instan",
+                    "Kedua potongan meledak karena muatan terpisah"
+                ],
+                correct: 0,
+                tip: "Dipol magnetik tidak pernah bisa dipisahkan menjadi monopol (tunggal).",
+                scientist: "James Clerk Maxwell",
+                era: "Abad 19",
+                desc: "Fisikawan Skotlandia yang menyatukan listrik, magnet, dan cahaya dalam 4 Persamaan Maxwell.",
+                type: "magnet"
+            },
+            {
+                id: 7,
+                question: "Siapakah genius pelopor sistem arus bolak-balik (AC) yang digunakan untuk mendistribusikan listrik ke seluruh rumah dan kota di dunia saat ini?",
+                options: [
+                    "Nikola Tesla",
+                    "Alessandro Volta",
+                    "Benjamin Franklin",
+                    "Andre-Marie Ampere"
+                ],
+                correct: 0,
+                tip: "Listrik AC dapat menempuh jarak sangat jauh dengan efisiensi tegangan tinggi.",
+                scientist: "Nikola Tesla",
+                era: "Abad 19-20",
+                desc: "Penemu & insinyur visioner pencipta motor induksi AC dan gelombang radio.",
+                type: "ac_current"
+            },
+            {
+                id: 8,
+                question: "Mengapa es batu terasa dingin saat kita pegang dengan tangan telanjang?",
+                options: [
+                    "Kalor (panas) dari tangan kita berpindah mengalir secara alami menuju ke es",
+                    "Es memancarkan gelombang radiasi dingin masuk ke dalam kulit kita",
+                    "Es menyerap molekul oksigen di sekitar tangan",
+                    "Sensasi dingin diciptakan oleh gesekan kulit dengan air"
+                ],
+                correct: 0,
+                tip: "Energi termal selalu mengalir spontan dari suhu lebih tinggi ke suhu lebih rendah.",
+                scientist: "Lord Kelvin (William Thomson)",
+                era: "Abad 19",
+                desc: "Pencetus skala suhu mutlak Kelvin dan Hukum Termodinamika.",
+                type: "heat"
+            },
+            {
+                id: 9,
+                question: "Pensil yang dimasukkan ke dalam gelas berisi air jernih terlihat seolah-olah patah/bengkok. Fenomena apakah ini dan ilmuwan mana yang mempelajari gelombang cahaya?",
+                options: [
+                    "Pembiasan Cahaya (Refraksi) - Christiaan Huygens",
+                    "Pemantulan Sempurna - Isaac Newton",
+                    "Penyebaran Panas - Blaise Pascal",
+                    "Efek Radiasi - Marie Curie"
+                ],
+                correct: 0,
+                tip: "Cahaya mengalami perubahan kecepatan saat berpindah media beda kerapatan optik.",
+                scientist: "Christiaan Huygens",
+                era: "Abad 17",
+                desc: "Ilmuwan Belanda pencetus Teori Gelombang Cahaya dan penemu jam pendulum.",
+                type: "refraction"
+            },
+            {
+                id: 10,
+                question: "Ketika kamu menekan ujung jarum suntik atau dongkrak hidrolik, tekanan tersebut diteruskan ke segala arah sama besar. Ini adalah gagasan dari tokoh bernama?",
+                options: [
+                    "Blaise Pascal",
+                    "Evangelista Torricelli",
+                    "Robert Boyle",
+                    "Daniel Bernoulli"
+                ],
+                correct: 0,
+                tip: "Hukum Pascal menjadi dasar dari semua sistem hidrolik seperti rem mobil dan alat berat.",
+                scientist: "Blaise Pascal",
+                era: "Abad 17",
+                desc: "Matematikawan & fisikawan Prancis penemu kalkulator mekanik dan Hukum Hidrolik.",
+                type: "pascal"
+            },
+            {
+                id: 11,
+                question: "Mengapa pesawat terbang yang sangat berat bisa terangkat ke udara saat melaju kencang di landasan? Konsep aliran fluida siapakah ini?",
+                options: [
+                    "Prinsip Bernoulli (Tekanan udara di atas sayap lebih kecil dibanding di bawah)",
+                    "Gaya Magnetik Tesla",
+                    "Kelembaman Newton",
+                    "Hukum Boyle tentang Gas"
+                ],
+                correct: 0,
+                tip: "Kecepatan aliran udara yang tinggi di atas bentuk sayap aerodinamis mengurangi tekanannya.",
+                scientist: "Daniel Bernoulli",
+                era: "Abad 18",
+                desc: "Matematikawan Swiss pelopor Dinamika Fluida dan teori kinetik gas.",
+                type: "bernoulli"
+            },
+            {
+                id: 12,
+                question: "Siapakah ilmuwan wanita pertama di dunia yang memenangkan 2 Hadiah Nobel atas penemuan unsur radioaktif Polonium dan Radium?",
+                options: [
+                    "Marie Curie",
+                    "Lise Meitner",
+                    "Rosalind Franklin",
+                    "Ada Lovelace"
+                ],
+                correct: 0,
+                tip: "Penemuannya menjadi fondasi pengobatan kanker modem menggunakan radioterapi.",
+                scientist: "Marie Curie",
+                era: "Abad 19-20",
+                desc: "Pelopor riset Radioaktivitas & wanita pertama penemu unsur kimia radioaktif.",
+                type: "radiation"
+            },
+            {
+                id: 13,
+                question: "Siapakah tokoh yang berhasil merumuskan model atom di mana elektron beredar mengelilingi inti atom pada lintasan/orbit tingkat energi tertentu?",
+                options: [
+                    "Niels Bohr",
+                    "John Dalton",
+                    "Ernest Rutherford",
+                    "J.J. Thomson"
+                ],
+                correct: 0,
+                tip: "Elektron dapat berpindah orbit dengan memancarkan atau menyerap kuanta cahaya (fotograf).",
+                scientist: "Niels Bohr",
+                era: "Abad 20",
+                desc: "Fisikawan Denmark pelopor Fisika Kuantum dan struktur atom modern.",
+                type: "atom"
+            },
+            {
+                id: 14,
+                question: "Eksperimen 'Kucing dalam Kotak' adalah analogi populer dalam fisika kuantum untuk menjelaskan konsep superposisi. Siapakah tokoh di baliknya?",
+                options: [
+                    "Erwin Schrödinger",
+                    "Werner Heisenberg",
+                    "Max Planck",
+                    "Albert Einstein"
+                ],
+                correct: 0,
+                tip: "Partikel kuantum berada dalam banyak kemungkinan status sekaligus sebelum diukur/diamati.",
+                scientist: "Erwin Schrödinger",
+                era: "Abad 20",
+                desc: "Pemenang Nobel asal Austria pencipta Persamaan Gelombang Kuantum.",
+                type: "schrodinger"
+            },
+            {
+                id: 15,
+                question: "Siapakah fisikawan yang pertama kali mendeteksi & membuktikan keberadaan gelombang elektromagnetik tak kasat mata (seperti sinyal radio & Wi-Fi)?",
+                options: [
+                    "Heinrich Hertz",
+                    "Guglielmo Marconi",
+                    "Alexander Graham Bell",
+                    "Wilhelm Röntgen"
+                ],
+                correct: 0,
+                tip: "Namanya diabadikan sebagai satuan frekuensi gelombang (Hz).",
+                scientist: "Heinrich Hertz",
+                era: "Abad 19",
+                desc: "Fisikawan Jerman yang membuktikan kebenaran teori gelombang elektromagnetik Maxwell.",
+                type: "wave"
+            },
+            {
+                id: 16,
+                question: "Siapakah penemu Barometer pertama yang membuktikan bahwa udara di atmosfer Bumi memiliki berat dan tekanan?",
+                options: [
+                    "Evangelista Torricelli",
+                    "Robert Hooke",
+                    "Blaise Pascal",
+                    "Galileo Galilei"
+                ],
+                correct: 0,
+                tip: "Tekanan udara dapat menopang kolom air raksa setinggi 76 cm di tingkat permukaan laut.",
+                scientist: "Evangelista Torricelli",
+                era: "Abad 17",
+                desc: "Fisikawan Italia murid Galileo yang menciptakan Barometer Air Raksa pertama.",
+                type: "barometer"
+            },
+            {
+                id: 17,
+                question: "Mengapa lintasan planet-planet saat mengelilingi Matahari berbentuk elips (lonjong) dan bukan lingkaran sempurna? Siapa yang merumuskan hukumnya?",
+                options: [
+                    "Johannes Kepler (Hukum I Kepler)",
+                    "Nicolaus Copernicus",
+                    "Tycho Brahe",
+                    "Edmond Halley"
+                ],
+                correct: 0,
+                tip: "Matahari berada di salah satu titik fokus dari orbit elips planet.",
+                scientist: "Johannes Kepler",
+                era: "Abad 17",
+                desc: "Astronom Jerman pencetus 3 Hukum Gerak Planet yang memandu navigasi antariksa.",
+                type: "kepler"
+            },
+            {
+                id: 18,
+                question: "Apabila kamu memperkecil volume gas dalam wadah tertutup, tekanan gas akan meningkat secara berbalik nilai. Siapakah tokoh pelopor hukum gas ini?",
+                options: [
+                    "Robert Boyle",
+                    "Amedeo Avogadro",
+                    "Joseph Louis Gay-Lussac",
+                    "Jacques Charles"
+                ],
+                correct: 0,
+                tip: "Partikel gas yang makin berhimpitan akan lebih sering menabrak dinding wadah.",
+                scientist: "Robert Boyle",
+                era: "Abad 17",
+                desc: "Bapak Kimia & Fisika Modern pencetus Hukum Tekanan Gas Terisolasi.",
+                type: "boyle"
+            },
+            {
+                id: 19,
+                question: "Siapakah ilmuwan Italia yang pertama kali menciptakan Baterai Kimia (Elemen Volta) sebagai sumber arus listrik searah (DC) berkelanjutan?",
+                options: [
+                    "Alessandro Volta",
+                    "Luigi Galvani",
+                    "Charles-Augustin de Coulomb",
+                    "Georg Ohm"
+                ],
+                correct: 0,
+                tip: "Tumpukan lempeng seng dan tembaga dalam larutan asam menghasilkan aliran elektron.",
+                scientist: "Alessandro Volta",
+                era: "Abad 18-19",
+                desc: "Fisikawan Italia penemu Baterai Listrik, namanya diabadikan menjadi satuan 'Volt'.",
+                type: "battery"
+            },
+            {
+                id: 20,
+                question: "Siapakah penemu Sinar-X yang dapat menembus jaringan kulit manusia untuk melihat struktur tulang di dalam tubuh tanpa pembedahan?",
+                options: [
+                    "Wilhelm Röntgen",
+                    "Henri Becquerel",
+                    "Ernest Rutherford",
+                    "J.J. Thomson"
+                ],
+                correct: 0,
+                tip: "Sinar berenergi tinggi ini memenangkan Hadiah Nobel Fisika pertama sepanjang sejarah pada 1901.",
+                scientist: "Wilhelm Röntgen",
+                era: "Abad 19-20",
+                desc: "Fisikawan Jerman penemu Radiasi Elektromagnetik Sinar-X (Röntgen).",
+                type: "xray"
+            }
+        ];
+
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const credentials = await signInWithCustomToken(auth, __initial_auth_token);
+                    currentUser = credentials.user;
+                } else {
+                    const credentials = await signInAnonymously(auth);
+                    currentUser = credentials.user;
+                }
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const roomParam = urlParams.get('room');
+                if (roomParam) {
+                    document.getElementById('room-code-input').value = roomParam.trim().toUpperCase();
+                }
+            } catch (err) {
+                console.error("Auth error:", err);
+            }
+        }
+        initAuth();
+
+        function getRoomDocRef(code) {
+            return doc(db, 'artifacts', appId, 'public', 'data', 'quiz_rooms', code);
+        }
+
+        function generateCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let res = '';
+            for (let i = 0; i < 6; i++) {
+                res += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return res;
+        }
+
+        window.createRoom = async function() {
+            if (isActionPending) return;
+            const nameInput = document.getElementById('player-name-input').value.trim();
+            if (!nameInput) {
+                showToast("Masukkan nama kamu terlebih dahulu!");
+                return;
+            }
+
+            isActionPending = true;
+            if (!currentUser) await initAuth();
+            if (!currentUser) {
+                showToast("Gagal terhubung ke server. Coba muat ulang halaman.");
+                isActionPending = false;
+                return;
+            }
+            
+            const code = generateCode();
+            currentRoomCode = code;
+            isHost = true;
+
+            const roomData = {
+                code: code,
+                hostId: currentUser.uid,
+                status: 'waiting',
+                currentQuestionIndex: 0,
+                questionStartTime: 0,
+                players: {
+                    [currentUser.uid]: {
+                        name: nameInput,
+                        score: 0,
+                        isHost: true,
+                        lastAnsweredIndex: -1
+                    }
+                },
+                createdAt: Date.now()
+            };
+
+            try {
+                await setDoc(getRoomDocRef(code), roomData);
+                listenToRoom(code);
+                showView('view-waiting');
+                document.getElementById('display-room-code').innerText = code;
+                document.getElementById('waiting-room-code').innerText = code;
+                document.getElementById('room-code-badge').classList.remove('hidden');
+                showToast("Ruangan kuis 20 soal berhasil dibuat!", false);
+            } catch (e) {
+                console.error("Gagal membuat ruangan:", e);
+                showToast("Gagal membuat ruangan. Pastikan koneksi terhubung.");
+            } finally {
+                isActionPending = false;
+            }
+        };
+
+        window.joinRoom = async function() {
+            if (isActionPending) return;
+            const nameInput = document.getElementById('player-name-input').value.trim();
+            const codeInput = document.getElementById('room-code-input').value.trim().toUpperCase();
+
+            if (!nameInput) {
+                showToast("Masukkan Nama kamu terlebih dahulu!");
+                return;
+            }
+            if (!codeInput || codeInput.length < 5) {
+                showToast("Masukkan Kode Ruangan yang valid!");
+                return;
+            }
+
+            isActionPending = true;
+            if (!currentUser) await initAuth();
+            if (!currentUser) {
+                showToast("Gagal terhubung ke server. Coba lagi.");
+                isActionPending = false;
+                return;
+            }
+
+            try {
+                const ref = getRoomDocRef(codeInput);
+                const snap = await getDoc(ref);
+
+                if (!snap.exists()) {
+                    showToast("Kode ruangan '" + codeInput + "' tidak ditemukan! Pastikan kode benar.");
+                    isActionPending = false;
+                    return;
+                }
+
+                const data = snap.data();
+                if (data.status === 'ended') {
+                    showToast("Sesi kuis di ruangan ini telah selesai.");
+                    isActionPending = false;
+                    return;
+                }
+
+                currentRoomCode = codeInput;
+                isHost = (data.hostId === currentUser.uid);
+
+                const updatedPlayers = { ...data.players };
+                updatedPlayers[currentUser.uid] = {
+                    name: nameInput,
+                    score: updatedPlayers[currentUser.uid]?.score || 0,
+                    isHost: isHost,
+                    lastAnsweredIndex: updatedPlayers[currentUser.uid]?.lastAnsweredIndex ?? -1
+                };
+
+                await updateDoc(ref, { players: updatedPlayers });
+
+                listenToRoom(codeInput);
+                document.getElementById('display-room-code').innerText = codeInput;
+                document.getElementById('room-code-badge').classList.remove('hidden');
+
+                showToast("Berhasil bergabung ke kuis!", false);
+
+                if (data.status === 'waiting') showView('view-waiting');
+                else if (data.status === 'playing') showView('view-game');
+                else showView('view-leaderboard');
+            } catch (err) {
+                console.error("Error join room:", err);
+                showToast("Terjadi kesalahan saat bergabung. Coba lagi.");
+            } finally {
+                isActionPending = false;
+            }
+        };
+
+        function listenToRoom(code) {
+            if (roomUnsubscribe) roomUnsubscribe();
+
+            roomUnsubscribe = onSnapshot(getRoomDocRef(code), (snap) => {
+                if (!snap.exists()) return;
+                const room = snap.data();
+
+                document.getElementById('waiting-room-code').innerText = room.code;
+                const playerArray = Object.values(room.players || {});
+                document.getElementById('player-count').innerText = playerArray.length;
+                
+                const playersListEl = document.getElementById('players-list');
+                playersListEl.innerHTML = playerArray.map(p => `
+                    <span class="px-3 py-1.5 bg-slate-800 border border-slate-700/80 rounded-xl text-xs font-semibold flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-user-astronaut text-indigo-400"></i>
+                        <span>${escapeHtml(p.name)}</span>
+                        ${p.isHost ? '<span class="text-[10px] bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-1 rounded">Host</span>' : ''}
+                    </span>
+                `).join('');
+
+                if (isHost) {
+                    document.getElementById('host-controls').classList.remove('hidden');
+                    document.getElementById('non-host-msg').classList.add('hidden');
+                    document.getElementById('next-question-host-control').classList.remove('hidden');
+                    document.getElementById('next-question-wait-msg').classList.add('hidden');
+                } else {
+                    document.getElementById('host-controls').classList.add('hidden');
+                    document.getElementById('non-host-msg').classList.remove('hidden');
+                    document.getElementById('next-question-host-control').classList.add('hidden');
+                    document.getElementById('next-question-wait-msg').classList.remove('hidden');
+                }
+
+                if (room.status === 'waiting') {
+                    showView('view-waiting');
+                } else if (room.status === 'playing') {
+                    showView('view-game');
+                    renderQuestion(room.currentQuestionIndex, room.questionStartTime, room.players);
+                } else if (room.status === 'leaderboard') {
+                    showView('view-leaderboard');
+                    renderLeaderboard(room.players, room.currentQuestionIndex >= quizBank.length - 1, room.currentQuestionIndex);
+                } else if (room.status === 'ended') {
+                    showView('view-leaderboard');
+                    renderLeaderboard(room.players, true, room.currentQuestionIndex);
+                }
+            }, (err) => {
+                console.error("Snapshot error:", err);
+            });
+        }
+
+        window.startGame = async function() {
+            if (!isHost || !currentRoomCode || isActionPending) return;
+            isActionPending = true;
+
+            try {
+                await updateDoc(getRoomDocRef(currentRoomCode), {
+                    status: 'playing',
+                    currentQuestionIndex: 0,
+                    questionStartTime: Date.now()
+                });
+            } catch (err) {
+                console.error(err);
+            } finally {
+                isActionPending = false;
+            }
+        };
+
+        function renderQuestion(qIndex, startTime, playersMap) {
+            const quiz = quizBank[qIndex];
+            if (!quiz) return;
+
+            const myPlayerData = playersMap && currentUser ? playersMap[currentUser.uid] : null;
+            const alreadyAnsweredInServer = myPlayerData && myPlayerData.lastAnsweredIndex === qIndex;
+
+            if (currentDisplayedQIndex !== qIndex) {
+                currentDisplayedQIndex = qIndex;
+                hasAnsweredCurrentQuestion = alreadyAnsweredInServer;
+
+                document.getElementById('quiz-progress-text').innerText = `Soal ${qIndex + 1} / ${quizBank.length}`;
+                document.getElementById('question-text').innerText = quiz.question;
+                
+                document.getElementById('scientist-name').innerText = quiz.scientist;
+                document.getElementById('scientist-era').innerText = quiz.era;
+                document.getElementById('scientist-desc').innerText = quiz.desc;
+
+                const feedbackBox = document.getElementById('feedback-box');
+                feedbackBox.classList.add('hidden');
+
+                const optionLetters = ['A', 'B', 'C', 'D'];
+                const optionsContainer = document.getElementById('options-container');
+                optionsContainer.innerHTML = quiz.options.map((opt, i) => `
+                    <button onclick="submitAnswer(${i})" id="opt-btn-${i}" class="answer-btn p-4 bg-slate-800/90 hover:bg-indigo-900/60 border border-slate-700 hover:border-indigo-500 rounded-2xl text-left transition-all flex items-start space-x-3 group">
+                        <span class="w-7 h-7 rounded-xl bg-slate-700 group-hover:bg-indigo-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0 transition-colors">${optionLetters[i]}</span>
+                        <span class="text-xs md:text-sm font-semibold text-slate-200 group-hover:text-white pt-0.5">${escapeHtml(opt)}</span>
+                    </button>
+                `).join('');
+
+                initPhysicsVisualization(quiz.type);
+            }
+
+            if (alreadyAnsweredInServer) {
+                hasAnsweredCurrentQuestion = true;
+                for (let i = 0; i < 4; i++) {
+                    const btn = document.getElementById(`opt-btn-${i}`);
+                    if (btn) btn.disabled = true;
+                }
+            }
+
+            startTimer(startTime, QUESTION_DURATION);
+        }
+
+        window.submitAnswer = async function(selectedIndex) {
+            if (hasAnsweredCurrentQuestion || !currentRoomCode) return;
+            hasAnsweredCurrentQuestion = true;
+
+            for (let i = 0; i < 4; i++) {
+                const btn = document.getElementById(`opt-btn-${i}`);
+                if (btn) btn.disabled = true;
+            }
+
+            try {
+                const snap = await getDoc(getRoomDocRef(currentRoomCode));
+                if (!snap.exists()) return;
+
+                const room = snap.data();
+                const qIndex = room.currentQuestionIndex;
+                const quiz = quizBank[qIndex];
+                const isCorrect = (selectedIndex === quiz.correct);
+
+                let pointsEarned = 0;
+                if (isCorrect) {
+                    const timeTaken = Math.max(0.5, (Date.now() - room.questionStartTime) / 1000);
+                    const speedBonus = Math.max(0, Math.floor((QUESTION_DURATION - timeTaken) * 10));
+                    pointsEarned = 100 + speedBonus;
+                    if (typeof confetti === 'function') confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
+                }
+
+                for (let i = 0; i < 4; i++) {
+                    const btn = document.getElementById(`opt-btn-${i}`);
+                    if (btn) {
+                        if (i === quiz.correct) {
+                            btn.className = "p-4 bg-emerald-950/80 border-2 border-emerald-500 rounded-2xl text-left flex items-start space-x-3 text-emerald-200 shadow-lg shadow-emerald-950/50";
+                            btn.innerHTML = `
+                                <span class="w-7 h-7 rounded-xl bg-emerald-500 text-slate-950 font-bold flex items-center justify-center text-xs flex-shrink-0">
+                                    <i class="fa-solid fa-check"></i>
+                                </span>
+                                <div class="flex-grow">
+                                    <span class="text-xs md:text-sm font-bold text-emerald-300 block">${escapeHtml(quiz.options[i])}</span>
+                                    <span class="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">(Jawaban Benar)</span>
+                                </div>
+                            `;
+                        } else if (i === selectedIndex && !isCorrect) {
+                            btn.className = "p-4 bg-rose-950/80 border-2 border-rose-500 rounded-2xl text-left flex items-start space-x-3 text-rose-200 shadow-lg shadow-rose-950/50";
+                            btn.innerHTML = `
+                                <span class="w-7 h-7 rounded-xl bg-rose-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </span>
+                                <div class="flex-grow">
+                                    <span class="text-xs md:text-sm font-bold text-rose-300 block">${escapeHtml(quiz.options[i])}</span>
+                                    <span class="text-[10px] text-rose-400 font-semibold uppercase tracking-wider">(Pilihanmu - Salah)</span>
+                                </div>
+                            `;
+                        } else {
+                            btn.className = "p-4 bg-slate-900/30 border border-slate-800 rounded-2xl text-left flex items-start space-x-3 opacity-30";
+                        }
+                    }
+                }
+
+                const feedbackBox = document.getElementById('feedback-box');
+                feedbackBox.classList.remove('hidden');
+                if (isCorrect) {
+                    feedbackBox.className = "p-4 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl text-emerald-300 text-center animate-bounce space-y-1";
+                    feedbackBox.innerHTML = `
+                        <div class="font-bold text-sm"><i class="fa-solid fa-circle-check text-lg mr-1.5"></i> Jawaban Kamu Benar! (+${pointsEarned} Poin)</div>
+                        <p class="text-xs text-emerald-200/80 font-normal italic">${escapeHtml(quiz.tip || "")}</p>
+                    `;
+                } else {
+                    feedbackBox.className = "p-4 bg-rose-500/20 border border-rose-500/40 rounded-2xl text-rose-300 text-center space-y-1";
+                    feedbackBox.innerHTML = `
+                        <div class="font-bold text-sm"><i class="fa-solid fa-circle-xmark text-lg mr-1.5"></i> Jawaban Kamu Kurang Tepat!</div>
+                        <p class="text-xs text-rose-200/90 font-normal italic">${escapeHtml(quiz.tip || "")}</p>
+                    `;
+                }
+
+                const updatedPlayers = { ...room.players };
+                if (updatedPlayers[currentUser.uid]) {
+                    updatedPlayers[currentUser.uid].score = (updatedPlayers[currentUser.uid].score || 0) + pointsEarned;
+                    updatedPlayers[currentUser.uid].lastAnsweredIndex = qIndex;
+                    await updateDoc(getRoomDocRef(currentRoomCode), { players: updatedPlayers });
+                }
+            } catch (err) {
+                console.error("Gagal mengirim jawaban:", err);
+            }
+        };
+
+        function startTimer(startTime, durationSeconds) {
+            clearInterval(timerInterval);
+            const timerBar = document.getElementById('timer-bar');
+            const timerText = document.getElementById('timer-text');
+
+            timerInterval = setInterval(() => {
+                const elapsed = (Date.now() - startTime) / 1000;
+                const remaining = Math.max(0, durationSeconds - elapsed);
+                const percent = (remaining / durationSeconds) * 100;
+
+                if (timerBar) timerBar.style.width = `${percent}%`;
+                if (timerText) timerText.innerText = `${Math.ceil(remaining)}s`;
+
+                if (remaining <= 0) {
+                    clearInterval(timerInterval);
+                    if (!hasAnsweredCurrentQuestion) {
+                        hasAnsweredCurrentQuestion = true;
+                        for (let i = 0; i < 4; i++) {
+                            const btn = document.getElementById(`opt-btn-${i}`);
+                            if (btn) btn.disabled = true;
+                        }
+                    }
+                    if (isHost && currentRoomCode) {
+                        updateDoc(getRoomDocRef(currentRoomCode), { status: 'leaderboard' }).catch(console.error);
+                    }
+                }
+            }, 200);
+        }
+
+        window.nextQuestion = async function() {
+            if (!isHost || !currentRoomCode || isActionPending) return;
+            isActionPending = true;
+
+            try {
+                const snap = await getDoc(getRoomDocRef(currentRoomCode));
+                if (!snap.exists()) return;
+
+                const room = snap.data();
+                const nextIdx = room.currentQuestionIndex + 1;
+
+                if (nextIdx < quizBank.length) {
+                    await updateDoc(getRoomDocRef(currentRoomCode), {
+                        status: 'playing',
+                        currentQuestionIndex: nextIdx,
+                        questionStartTime: Date.now()
+                    });
+                } else {
+                    await updateDoc(getRoomDocRef(currentRoomCode), { status: 'ended' });
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                isActionPending = false;
+            }
+        };
+
+        window.resetRoom = async function() {
+            if (!isHost || isActionPending) return;
+            isActionPending = true;
+
+            try {
+                const newCode = generateCode();
+                const snap = await getDoc(getRoomDocRef(currentRoomCode));
+                const oldPlayers = snap.exists() ? snap.data().players : {};
+
+                Object.keys(oldPlayers).forEach(k => {
+                    oldPlayers[k].score = 0;
+                    oldPlayers[k].lastAnsweredIndex = -1;
+                });
+
+                currentRoomCode = newCode;
+                currentDisplayedQIndex = -1;
+
+                await setDoc(getRoomDocRef(newCode), {
+                    code: newCode,
+                    hostId: currentUser.uid,
+                    status: 'waiting',
+                    currentQuestionIndex: 0,
+                    questionStartTime: 0,
+                    players: oldPlayers,
+                    createdAt: Date.now()
+                });
+
+                listenToRoom(newCode);
+                document.getElementById('display-room-code').innerText = newCode;
+                document.getElementById('waiting-room-code').innerText = newCode;
+                showToast("Kode ruangan diperbarui otomatis: " + newCode, false);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                isActionPending = false;
+            }
+        };
+
+        window.leaveRoom = function() {
+            if (roomUnsubscribe) roomUnsubscribe();
+            currentRoomCode = null;
+            currentDisplayedQIndex = -1;
+            showView('view-lobby');
+            document.getElementById('room-code-badge').classList.add('hidden');
+        };
+
+        function renderLeaderboard(playersMap, isFinal, currentQIdx = 0) {
+            const listEl = document.getElementById('leaderboard-list');
+            const titleEl = document.getElementById('leaderboard-title');
+            const subEl = document.getElementById('leaderboard-subtitle');
+            const hostPanel = document.getElementById('host-answer-key-panel');
+
+            if (isHost && quizBank[currentQIdx]) {
+                const quiz = quizBank[currentQIdx];
+                hostPanel.classList.remove('hidden');
+                document.getElementById('host-key-question-num').innerText = `Soal #${currentQIdx + 1}`;
+                
+                const optionLetters = ['A', 'B', 'C', 'D'];
+                document.getElementById('host-key-options-list').innerHTML = quiz.options.map((opt, i) => {
+                    const isCorrect = (i === quiz.correct);
+                    return `
+                        <div class="p-2 rounded-xl border flex items-center space-x-2 ${isCorrect ? 'bg-emerald-900/60 border-emerald-500 text-emerald-200 font-bold' : 'bg-slate-900/50 border-slate-800 text-slate-400'}">
+                            <span class="w-5 h-5 rounded-lg ${isCorrect ? 'bg-emerald-500 text-slate-950' : 'bg-slate-700 text-slate-300'} flex items-center justify-center text-[10px] flex-shrink-0 font-bold">${optionLetters[i]}</span>
+                            <span class="truncate">${escapeHtml(opt)}</span>
+                            ${isCorrect ? '<i class="fa-solid fa-check text-emerald-400 ml-auto"></i>' : ''}
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                hostPanel.classList.add('hidden');
+            }
+
+            if (isFinal) {
+                titleEl.innerText = "🏆 Pemenang Kuis Fisika!";
+                subEl.innerText = "Selamat kepada para juara pemaham konsep & tokoh fisika terbaik!";
+                document.getElementById('next-question-host-control').classList.add('hidden');
+                document.getElementById('next-question-wait-msg').classList.add('hidden');
+                document.getElementById('game-over-controls').classList.remove('hidden');
+                if (typeof confetti === 'function') confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
+            } else {
+                titleEl.innerText = "Papan Skor Sementara";
+                subEl.innerText = "Persaingan semakin seru! Siapa yang berada di puncak?";
+                document.getElementById('game-over-controls').classList.add('hidden');
+            }
+
+            const players = Object.values(playersMap || {}).sort((a, b) => b.score - a.score);
+
+            listEl.innerHTML = players.map((p, idx) => {
+                let badgeClass = "bg-slate-800 text-slate-300";
+                let rankIcon = `<span class="font-bold text-sm">${idx + 1}</span>`;
+
+                if (idx === 0) {
+                    badgeClass = "bg-yellow-500/20 text-yellow-300 border border-yellow-500/40";
+                    rankIcon = `<i class="fa-solid fa-crown text-yellow-400"></i>`;
+                } else if (idx === 1) {
+                    badgeClass = "bg-slate-300/20 text-slate-200 border border-slate-300/40";
+                    rankIcon = `<i class="fa-solid fa-medal text-slate-300"></i>`;
+                } else if (idx === 2) {
+                    badgeClass = "bg-amber-700/20 text-amber-400 border border-amber-700/40";
+                    rankIcon = `<i class="fa-solid fa-award text-amber-500"></i>`;
+                }
+
+                return `
+                    <div class="grid grid-cols-12 p-3 items-center text-sm ${idx % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-900/80'}">
+                        <div class="col-span-2 text-center flex justify-center">
+                            <div class="w-7 h-7 rounded-lg ${badgeClass} flex items-center justify-center">
+                                ${rankIcon}
+                            </div>
+                        </div>
+                        <div class="col-span-7 font-semibold text-slate-200 flex items-center space-x-2">
+                            <span>${escapeHtml(p.name)}</span>
+                            ${p.isHost ? '<span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded">Host</span>' : ''}
+                        </div>
+                        <div class="col-span-3 text-right font-mono font-bold text-yellow-400">
+                            ${p.score} pt
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        let animFrameId = null;
+        function initPhysicsVisualization(type) {
+            const canvas = document.getElementById('physics-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.clientWidth || 300;
+            canvas.height = canvas.clientHeight || 200;
+
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+
+            let tick = 0;
+
+            function animate() {
+                tick += 0.04;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+
+                if (type === 'inertia' || type === 'freefall') {
+                    ctx.fillStyle = '#6366f1';
+                    ctx.beginPath();
+                    const dropY = (cy - 40) + Math.abs(Math.sin(tick * 2)) * 80;
+                    ctx.arc(cx, dropY, 18, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#e2e8f0';
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy - 40);
+                    ctx.lineTo(cx, cy + 40);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                } else if (type === 'buoyancy' || type === 'pascal' || type === 'bernoulli') {
+                    ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+                    ctx.fillRect(cx - 80, cy - 10, 160, 70);
+
+                    const floatY = cy - 20 + Math.sin(tick * 1.5) * 6;
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.fillRect(cx - 30, floatY, 60, 30);
+                } else if (type === 'orbit' || type === 'kepler' || type === 'atom') {
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                    ctx.beginPath();
+                    ctx.ellipse(cx, cy, 70, 35, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    const orbX = cx + Math.cos(tick * 1.2) * 70;
+                    const orbY = cy + Math.sin(tick * 1.2) * 35;
+
+                    ctx.fillStyle = '#e11d48';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.beginPath();
+                    ctx.arc(orbX, orbY, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (type === 'magnet' || type === 'induction' || type === 'ac_current') {
+                    const shift = Math.sin(tick) * 10;
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fillRect(cx - 60 - shift, cy - 15, 45, 30);
+                    ctx.fillStyle = '#3b82f6';
+                    ctx.fillRect(cx - 15 - shift, cy - 15, 45, 30);
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.fillText('U', cx - 45 - shift, cy + 4);
+                    ctx.fillText('S', cx - 0 - shift, cy + 4);
+                } else {
+                    ctx.strokeStyle = '#a855f7';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    for (let x = -80; x <= 80; x += 5) {
+                        const y = Math.sin((x * 0.1) + (tick * 3)) * 20;
+                        if (x === -80) ctx.moveTo(cx + x, cy + y);
+                        else ctx.lineTo(cx + x, cy + y);
+                    }
+                    ctx.stroke();
+                }
+
+                animFrameId = requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+
+        function showView(viewId) {
+            ['view-lobby', 'view-waiting', 'view-game', 'view-leaderboard'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(viewId);
+            if (target) target.classList.remove('hidden');
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        window.copyRoomCode = function() {
+            if (!currentRoomCode) return;
+            const temp = document.createElement('input');
+            document.body.appendChild(temp);
+            temp.value = currentRoomCode;
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast("Kode ruangan " + currentRoomCode + " berhasil disalin!", false);
+        };
+
+        window.copyShareLink = function() {
+            if (!currentRoomCode) return;
+            const link = window.location.origin + window.location.pathname + "?room=" + currentRoomCode;
+            const temp = document.createElement('input');
+            document.body.appendChild(temp);
+            temp.value = link;
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast("Link langsung ke ruangan berhasil disalin!", false);
+        };
+    </script>
+</body>
+</html>
