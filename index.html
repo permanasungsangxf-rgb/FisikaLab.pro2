@@ -3,1299 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FisikaLab - Kuis Konsep Fisika Realtime</title>
+    <title>Kuis Fisika Realtime - FisikaLab</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Canvas Confetti -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Firebase Compat SDK v10.8.0 (Versi Stabil, Bebas Error 404 & Aman CDN) -->
+    <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-    <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: linear-gradient(135deg, #0b0f19 0%, #111827 50%, #1e1035 100%);
-            min-height: 100vh;
-            color: #f3f4f6;
-        }
-        .font-game {
-            font-family: 'Fredoka', cursive;
-        }
-        .glass-card {
-            background: rgba(17, 24, 39, 0.75);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .glass-btn {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
-            transition: all 0.2s ease;
-        }
-        .glass-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.55);
-        }
-        .glass-btn:active:not(:disabled) {
-            transform: translateY(1px);
-        }
-        .pulse-glow {
-            animation: pulse-glow-anim 2s infinite;
-        }
-        @keyframes pulse-glow-anim {
-            0% { box-shadow: 0 0 0 0px rgba(99, 102, 241, 0.6); }
-            70% { box-shadow: 0 0 0 14px rgba(99, 102, 241, 0); }
-            100% { box-shadow: 0 0 0 0px rgba(99, 102, 241, 0); }
-        }
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.6);
-            border-radius: 8px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #4f46e5;
-            border-radius: 8px;
-        }
-    </style>
 </head>
-<body class="p-3 md:p-6 flex flex-col justify-between min-h-screen">
+<body class="bg-slate-900 text-white min-h-screen flex flex-col justify-between font-sans">
 
-    <!-- Header & Indikator Koneksi Server -->
-    <header class="max-w-6xl mx-auto w-full flex flex-wrap justify-between items-center gap-3 mb-6 glass-card p-4 rounded-2xl shadow-xl">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-indigo-600/90 border border-indigo-400/40 flex items-center justify-center text-xl font-bold font-game shadow-lg">
-                <i class="fa-solid fa-atom text-cyan-300 animate-spin" style="animation-duration: 9s;"></i>
-            </div>
-            <div>
-                <h1 class="text-xl md:text-2xl font-bold font-game tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-400">FisikaLab Live!</h1>
-                <p class="text-xs text-slate-400">Kuis Konsep Fisika Realtime & Tokoh Pelopor Dunia</p>
-            </div>
-        </div>
-
-        <div class="flex items-center space-x-3">
-            <div id="connection-status" class="flex items-center space-x-1.5 bg-slate-900/80 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-xl">
-                <span class="w-2 h-2 rounded-full bg-yellow-400 animate-ping"></span>
-                <span id="connection-text" class="font-semibold">Menghubungkan...</span>
-            </div>
-            <div id="room-code-badge" class="hidden flex items-center bg-indigo-950/80 border border-indigo-500/40 px-3 py-1.5 rounded-xl shadow-inner">
-                <span class="text-xs text-indigo-300 mr-2 font-semibold">Ruangan:</span>
-                <span id="display-room-code" class="font-mono text-base font-bold text-yellow-400 tracking-wider">------</span>
-            </div>
+    <!-- Header -->
+    <header class="p-4 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
+        <h1 class="text-xl font-bold text-cyan-400">⚛️ FisikaLab Quiz</h1>
+        <div id="status-koneksi" class="text-xs bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full border border-emerald-500/30">
+            🟢 Terhubung ke Server
         </div>
     </header>
 
-    <!-- Notifikasi Toast -->
-    <div id="toast-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden bg-indigo-600 text-white px-6 py-3 rounded-2xl shadow-2xl font-bold text-sm flex items-center space-x-2 border border-indigo-400 transition-all">
-        <i id="toast-icon" class="fa-solid fa-circle-info text-lg"></i>
-        <span id="toast-text">Pesan pemberitahuan...</span>
-    </div>
-
-    <!-- MAIN CONTAINER -->
-    <main class="max-w-6xl mx-auto w-full flex-grow flex items-center justify-center">
-
-        <!-- VIEW 1: LOBBY -->
-        <div id="view-lobby" class="w-full max-w-lg glass-card p-6 md:p-8 rounded-3xl shadow-2xl text-center space-y-6">
-            <div class="inline-block p-4 bg-indigo-500/10 rounded-full border border-indigo-500/20">
-                <i class="fa-solid fa-graduation-cap text-5xl text-indigo-400 animate-bounce"></i>
-            </div>
-            <div>
-                <h2 class="text-2xl md:text-3xl font-bold font-game text-white">Kuis Fisika Konseptual</h2>
-                <p class="text-slate-300 text-xs md:text-sm mt-1">Uji pemahaman dasar fisika & kenali para ilmuwan pelopor dunia tanpa hitungan rumus!</p>
-            </div>
-
-            <div class="space-y-4 pt-2">
+    <!-- Main Container -->
+    <main class="container mx-auto px-4 py-8 max-w-2xl flex-grow flex flex-col justify-center">
+        
+        <!-- Halaman Masuk / Buat Ruangan -->
+        <div id="screen-login" class="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
+            <h2 class="text-2xl font-bold mb-4 text-center">Selamat Datang di Kuis Fisika</h2>
+            <div class="space-y-4">
                 <div>
-                    <label class="block text-left text-xs font-semibold text-slate-400 mb-1 ml-1">Nama Kamu</label>
-                    <input type="text" id="player-name-input" placeholder="Masukkan nama..." maxlength="15" 
-                        class="w-full px-5 py-3.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-all text-center text-lg font-semibold">
+                    <label class="block text-sm font-medium mb-1 text-slate-300">Nama Lengkap</label>
+                    <input type="text" id="input-nama" placeholder="Masukkan nama Anda..." class="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-cyan-400">
                 </div>
-                
-                <div class="flex items-center space-x-2">
-                    <input type="text" id="room-code-input" placeholder="KODE RUANGAN" maxlength="6"
-                        class="w-2/3 px-4 py-3.5 rounded-xl bg-slate-900/90 border border-slate-700 text-yellow-400 placeholder-slate-600 focus:outline-none focus:border-cyan-400 uppercase font-mono text-center tracking-widest text-lg font-bold">
-                    <button id="btn-join-room" onclick="joinRoom()" class="w-1/3 py-3.5 glass-btn rounded-xl font-bold text-white flex items-center justify-center space-x-1">
-                        <span>Masuk</span>
-                        <i class="fa-solid fa-right-to-bracket text-sm"></i>
-                    </button>
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-slate-300">Kode Ruangan</label>
+                    <input type="text" id="input-room" placeholder="Contoh: FSK123" class="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-cyan-400 uppercase">
                 </div>
-
-                <div class="relative flex py-1 items-center">
-                    <div class="flex-grow border-t border-slate-700"></div>
-                    <span class="flex-shrink mx-4 text-slate-500 text-xs uppercase tracking-wider font-semibold">atau</span>
-                    <div class="flex-grow border-t border-slate-700"></div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="gabungRuangan()" class="flex-1 bg-cyan-500 hover:bg-cyan-600 font-semibold p-3 rounded-lg transition cursor-pointer">Gabung Ruangan</button>
+                    <button type="button" onclick="buatRuangan()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 font-semibold p-3 rounded-lg transition cursor-pointer">Buat Ruangan</button>
                 </div>
-
-                <button id="btn-create-room" onclick="createRoom()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-plus-circle"></i>
-                    <span>Buat Ruangan Baru (Guru / Host)</span>
-                </button>
             </div>
         </div>
 
-        <!-- VIEW 2: WAITING ROOM / LOBBY RUANGAN -->
-        <div id="view-waiting" class="hidden w-full max-w-2xl glass-card p-6 md:p-8 rounded-3xl shadow-2xl text-center space-y-6">
-            <div class="space-y-2">
-                <span class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs px-3 py-1 rounded-full uppercase font-bold tracking-wider">Ruangan Siap</span>
-                <h2 class="text-xl md:text-2xl font-bold font-game">Kode Masuk Ruangan:</h2>
-                
-                <div class="flex flex-col sm:flex-row justify-center items-center gap-3 pt-2">
-                    <div class="bg-slate-900/90 px-8 py-3 rounded-2xl border-2 border-yellow-500/50 shadow-inner">
-                        <span id="waiting-room-code" class="text-4xl md:text-6xl font-mono font-extrabold text-yellow-400 tracking-widest">------</span>
-                    </div>
-                    <div class="flex sm:flex-col gap-2">
-                        <button onclick="copyRoomCode()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-white font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-md">
-                            <i class="fa-solid fa-copy"></i>
-                            <span>Salin Kode</span>
-                        </button>
-                        <button onclick="copyShareLink()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 hover:text-white font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all border border-slate-700">
-                            <i class="fa-solid fa-share-nodes"></i>
-                            <span>Salin Link</span>
-                        </button>
-                    </div>
-                </div>
-                <p class="text-slate-400 text-xs pt-1">Siswa dapat mengetik kode di atas atau membuka link langsung untuk bergabung!</p>
+        <!-- Halaman Kuis -->
+        <div id="screen-quiz" class="hidden bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700">
+                <span id="label-ruangan" class="text-sm font-semibold text-cyan-400">Ruangan: -</span>
+                <span id="label-skor" class="text-sm font-semibold bg-slate-700 px-3 py-1 rounded-full">Skor: 0</span>
             </div>
-
-            <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
-                <h3 class="text-sm font-semibold text-slate-400 mb-3 flex items-center justify-center">
-                    <i class="fa-solid fa-users text-cyan-400 mr-2"></i>
-                    Siswa Berpartisipasi (<span id="player-count">0</span>)
-                </h3>
-                <div id="players-list" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
-                </div>
-            </div>
-
-            <div id="host-controls" class="hidden pt-2">
-                <button id="btn-start-game" onclick="startGame()" class="w-full py-4 glass-btn rounded-xl text-lg font-bold text-white shadow-xl flex items-center justify-center space-x-2 pulse-glow">
-                    <i class="fa-solid fa-play"></i>
-                    <span>Mulai Kuis Sekarang!</span>
-                </button>
-            </div>
-            <p id="non-host-msg" class="text-indigo-300 text-sm italic animate-pulse">Menunggu Host memulai permainan...</p>
-        </div>
-
-        <!-- VIEW 3: GAMEPLAY -->
-        <div id="view-game" class="hidden w-full grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             
-            <!-- Kolom Kiri: Visualisasi & Profil Tokoh -->
-            <div class="lg:col-span-1 glass-card p-5 rounded-3xl flex flex-col items-center justify-center space-y-4">
-                <div class="w-full flex justify-between items-center text-xs font-semibold text-slate-400">
-                    <span class="flex items-center"><i class="fa-solid fa-vial text-cyan-400 mr-1.5"></i> Visual Konsep</span>
-                    <span id="quiz-progress-text" class="text-indigo-300 font-bold">Soal 1 / 20</span>
+            <div id="soal-container" class="mb-6">
+                <h3 id="teks-soal" class="text-lg font-medium mb-4">Memuat soal...</h3>
+                <div id="opsi-jawaban" class="grid grid-cols-1 gap-3">
+                    <!-- Opsi jawaban dimasukkan lewat JS -->
                 </div>
-                
-                <div id="visual-container" class="w-full h-48 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-800 flex items-center justify-center">
-                    <canvas id="physics-canvas" class="w-full h-full"></canvas>
-                    <div id="visual-caption" class="absolute bottom-2 left-2 right-2 bg-slate-900/80 backdrop-blur-sm p-1.5 rounded-xl text-center text-[11px] text-cyan-200 border border-slate-700/50">
-                        Simulasi Konsep Fisika
-                    </div>
-                </div>
-
-                <!-- Card Tokoh Fisikawan -->
-                <div class="w-full bg-gradient-to-br from-indigo-950/80 to-slate-900/90 p-3.5 rounded-2xl border border-indigo-500/30 text-xs text-slate-300 space-y-1.5 shadow-md">
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-yellow-300 flex items-center text-xs">
-                            <i class="fa-solid fa-user-ninja text-indigo-400 mr-1.5"></i> Tokoh Pelopor:
-                        </span>
-                        <span id="scientist-era" class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30">Abad 17</span>
-                    </div>
-                    <p id="scientist-name" class="font-bold text-sm text-white">Sir Isaac Newton</p>
-                    <p id="scientist-desc" class="text-slate-400 text-[11px] leading-relaxed">Merumuskan Hukum Gerak & Gravitasi Semesta yang menjadi dasar mekanika klasik.</p>
-                </div>
-            </div>
-
-            <!-- Kolom Tengah & Kanan: Pertanyaan & Pilihan -->
-            <div class="lg:col-span-2 glass-card p-6 rounded-3xl space-y-6">
-                <!-- Timer Bar -->
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Sisa Waktu Jawab</span>
-                        <span id="timer-text" class="text-lg font-mono font-bold text-yellow-400">20s</span>
-                    </div>
-                    <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                        <div id="timer-bar" class="bg-gradient-to-r from-emerald-500 via-yellow-500 to-red-500 h-full w-full transition-all duration-200 ease-linear"></div>
-                    </div>
-                </div>
-
-                <!-- Pertanyaan -->
-                <div class="space-y-2">
-                    <h3 id="question-text" class="text-lg md:text-xl font-bold font-game leading-snug text-white">
-                        Memuat pertanyaan fisika...
-                    </h3>
-                </div>
-
-                <!-- Pilihan Jawaban -->
-                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                </div>
-
-                <!-- Feedback Pesan -->
-                <div id="feedback-box" class="hidden p-4 rounded-2xl text-center font-bold text-sm transition-all shadow-lg"></div>
             </div>
         </div>
 
-        <!-- VIEW 4: LEADERBOARD -->
-        <div id="view-leaderboard" class="hidden w-full max-w-2xl glass-card p-6 md:p-8 rounded-3xl shadow-2xl text-center space-y-6">
-            <div class="space-y-2">
-                <i class="fa-solid fa-trophy text-5xl text-yellow-400 animate-bounce"></i>
-                <h2 id="leaderboard-title" class="text-3xl font-bold font-game">Papan Skor Real-Time</h2>
-                <p id="leaderboard-subtitle" class="text-slate-300 text-sm">Peringkat pemahaman konsep fisika & tokoh ilmuwan!</p>
+        <!-- Papan Skor / Leaderboard -->
+        <div id="screen-leaderboard" class="hidden bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
+            <h2 class="text-xl font-bold mb-4 text-center text-cyan-400">🏆 Papan Skor</h2>
+            <div id="daftar-skor" class="space-y-2 mb-4">
+                <!-- Daftar nilai -->
             </div>
-
-            <!-- Panel Kunci Jawaban Khusus Host -->
-            <div id="host-answer-key-panel" class="hidden bg-indigo-950/80 border border-indigo-500/40 p-4 rounded-2xl text-left space-y-2 shadow-inner">
-                <div class="flex items-center justify-between text-xs text-yellow-300 font-bold">
-                    <span class="flex items-center"><i class="fa-solid fa-key mr-2 text-yellow-400"></i> Kunci Jawaban Soal (Khusus Host)</span>
-                    <span id="host-key-question-num" class="bg-indigo-900 px-2 py-0.5 rounded text-indigo-200">Soal #1</span>
-                </div>
-                <div id="host-key-options-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
-                </div>
-            </div>
-
-            <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden text-left shadow-inner">
-                <div class="grid grid-cols-12 bg-slate-800/80 p-3 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    <span class="col-span-2 text-center">Pos</span>
-                    <span class="col-span-7">Nama Siswa</span>
-                    <span class="col-span-3 text-right">Skor Total</span>
-                </div>
-                <div id="leaderboard-list" class="divide-y divide-slate-800/60 max-h-64 overflow-y-auto">
-                </div>
-            </div>
-
-            <div id="next-question-host-control" class="hidden pt-2">
-                <button id="btn-next-question" onclick="nextQuestion()" class="w-full py-4 glass-btn rounded-xl text-lg font-bold text-white shadow-xl flex items-center justify-center space-x-2">
-                    <span>Lanjut Ke Soal Berikutnya</span>
-                    <i class="fa-solid fa-arrow-right"></i>
-                </button>
-            </div>
-            <p id="next-question-wait-msg" class="text-indigo-300 text-sm italic animate-pulse">Menunggu Host melanjutkan ke soal berikutnya...</p>
-            
-            <div id="game-over-controls" class="hidden space-y-3 pt-2">
-                <button onclick="resetRoom()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-arrows-rotate"></i>
-                    <span>Main Lagi (Ruangan Diperbarui)</span>
-                </button>
-                <button onclick="leaveRoom()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition-all border border-slate-700">
-                    Kembali ke Menu Utama
-                </button>
-            </div>
+            <button type="button" onclick="location.reload()" class="w-full bg-slate-700 hover:bg-slate-600 p-3 rounded-lg font-semibold cursor-pointer">Kembali ke Menu Utama</button>
         </div>
 
     </main>
 
-    <!-- Script Aplikasi & Firebase Engine -->
+    <!-- Footer -->
+    <footer class="p-4 text-center text-xs text-slate-500 border-t border-slate-800">
+        FisikaLab Multi-User Platform &copy; 2026
+    </footer>
+
+    <!-- Script Aplikasi -->
     <script>
-        // 1. Konfigurasi Server Firebase Database
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                apiKey: "AIzaSyB_DemoKeyFisikaLab2026",
-                authDomain: "fisikalab-quiz.firebaseapp.com",
-                projectId: "fisikalab-quiz",
-                storageBucket: "fisikalab-quiz.appspot.com",
-                messagingSenderId: "1234567890",
-                appId: "1:1234567890:web:abcdef123456"
-            };
+        let playerNama = '';
+        let currentRoom = '';
+        let currentSkor = 0;
+        let indexSoal = 0;
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'fisikalab-v1';
-
-        // 2. Inisialisasi Firebase Compat Mode
-        let db = null;
-        let auth = null;
-        let isFirebaseActive = false;
-
-        try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            db = firebase.firestore();
-            auth = firebase.auth();
-            isFirebaseActive = true;
-            updateConnectionBadge(true, "Terhubung ke Server");
-        } catch (err) {
-            console.warn("Firebase fallback mode aktif:", err);
-            updateConnectionBadge(false, "Mode Lokal / Standalone");
-        }
-
-        let currentUser = { uid: 'usr_' + Math.random().toString(36).substring(2, 9) };
-        let currentRoomCode = null;
-        let isHost = false;
-        let roomUnsubscribe = null;
-        let timerInterval = null;
-        let hasAnsweredCurrentQuestion = false;
-        let isActionPending = false;
-        let currentDisplayedQIndex = -1;
-        const QUESTION_DURATION = 20;
-
-        // Fallback Storage untuk mode tanpa Firebase
-        let localRoomsState = {};
-
-        function updateConnectionBadge(isOnline, text) {
-            const statusEl = document.getElementById('connection-status');
-            const textEl = document.getElementById('connection-text');
-            if (statusEl && textEl) {
-                textEl.innerText = text;
-                if (isOnline) {
-                    statusEl.className = "flex items-center space-x-1.5 bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs px-3 py-1.5 rounded-xl";
-                    statusEl.querySelector('span').className = "w-2 h-2 rounded-full bg-emerald-400";
-                } else {
-                    statusEl.className = "flex items-center space-x-1.5 bg-amber-950/80 border border-amber-500/40 text-amber-300 text-xs px-3 py-1.5 rounded-xl";
-                    statusEl.querySelector('span').className = "w-2 h-2 rounded-full bg-amber-400";
-                }
-            }
-        }
-
-        function showToast(message, isError = true) {
-            const toast = document.getElementById('toast-message');
-            const toastText = document.getElementById('toast-text');
-            const toastIcon = document.getElementById('toast-icon');
-            if(!toast || !toastText) return;
-            
-            toastText.innerText = message;
-            toastIcon.className = isError ? "fa-solid fa-circle-exclamation text-lg" : "fa-solid fa-circle-check text-lg";
-            toast.className = `fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-${isError ? 'rose' : 'emerald'}-600 text-white px-6 py-3 rounded-2xl shadow-2xl font-bold text-sm flex items-center space-x-2 border border-${isError ? 'rose' : 'emerald'}-400 transition-all`;
-            toast.classList.remove('hidden');
-            setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 3500);
-        }
-
-        // Bank 20 Soal Fisika Konseptual
-        const quizBank = [
+        const daftarSoal = [
             {
-                id: 1,
-                question: "Ketika mobil pengereman mendadak, tubuh pangeran terdorong ke depan secara otomatis. Siapa fisikawan perumus sifat kelembaman (inersia) ini?",
-                options: ["Sir Isaac Newton", "Albert Einstein", "Galileo Galilei", "Nikola Tesla"],
-                correct: 0,
-                tip: "Hukum I Newton: Benda cenderung mempertahankan kondisi geraknya jika gaya luar nol.",
-                scientist: "Sir Isaac Newton",
-                era: "Abad 17-18",
-                desc: "Bapak Fisika Klasik perumus Hukum Gerak & Gravitasi Semesta.",
-                type: "inertia"
+                soal: "Siapakah ilmuwan penemu Hukum Gravitasi Universal?",
+                opsi: ["Albert Einstein", "Isaac Newton", "Nikola Tesla", "Galileo Galilei"],
+                jawaban: 1
             },
             {
-                id: 2,
-                question: "Siapakah ilmuwan Italia yang membuktikan bahwa semua benda jatuh bebas dengan percepatan sama tanpa terpengaruh beratnya (tanpa gesekan udara)?",
-                options: ["Galileo Galilei", "Archimedes", "Michael Faraday", "Johannes Kepler"],
-                correct: 0,
-                tip: "Eksperimen jatuh Menara Pisa membuktikan gravitasi menarik semua massa secara setara.",
-                scientist: "Galileo Galilei",
-                era: "Abad 16-17",
-                desc: "Bapak Sains Modern pelopor pengamatan astronomi teleskopik.",
-                type: "freefall"
+                soal: "Satuan Internasional (SI) untuk mengukur Gaya adalah...",
+                opsi: ["Joule", "Watt", "Newton", "Pascal"],
+                jawaban: 2
             },
             {
-                id: 3,
-                question: "Mengapa kapal baja sangat berat bisa mengapung di laut, sedangkan kerikil kecil justru tenggelam? Hukum siapakah ini?",
-                options: ["Hukum Apung Archimedes", "Teori Relativitas Einstein", "Hukum Induksi Faraday", "Kuantum Niels Bohr"],
-                correct: 0,
-                tip: "Gaya apung sama dengan berat fluida yang dipindahkan oleh bagian benda tercelup.",
-                scientist: "Archimedes dari Sirakusa",
-                era: "Yunani Kuno (287 SM)",
-                desc: "Matematikawan Yunani Kuno terkenal dengan kata 'Eureka!'.",
-                type: "buoyancy"
-            },
-            {
-                id: 4,
-                question: "Mengapa astronot di ISS mengapung melayang, padahal gravitasi bumi di stasiun tersebut masih sekitar 90%?",
-                options: ["ISS dan astronot jatuh bebas mengelilingi Bumi secara kontinu", "Tidak ada udara di luar angkasa", "Baju astronot berisi gas helium", "Medan magnet menolak baju astronot"],
-                correct: 0,
-                tip: "Mengorbit adalah fenomena 'jatuh melengkung mengelilingi Bumi terus-menerus'.",
-                scientist: "Albert Einstein",
-                era: "Abad 20",
-                desc: "Pencetus Teori Relativitas yang menjelaskan gravitasi sebagai kelengkungan ruang-waktu.",
-                type: "orbit"
-            },
-            {
-                id: 5,
-                question: "Siapakah pencetus Hukum Induksi Elektromagnetik yang memungkinkan generator listrik mengubah gerak mekanik menjadi listrik?",
-                options: ["Michael Faraday", "Thomas Edison", "James Watt", "Lord Kelvin"],
-                correct: 0,
-                tip: "Perubahan medan magnetik menembus kawat menghasilkan arus listrik induksi.",
-                scientist: "Michael Faraday",
-                era: "Abad 19",
-                desc: "Ilmuwan Inggris penemu induksi elektromagnetik & motor listrik pertama.",
-                type: "induction"
-            },
-            {
-                id: 6,
-                question: "Jika magnet batang dipotong persis di tengah menjadi dua, apa yang terjadi pada kedua potongan magnet tersebut?",
-                options: ["Terbentuk 2 magnet baru ber-Kutub Utara & Selatan", "Potongan terpisah menjadi kutub Utara saja dan Selatan saja", "Sifat magnetnya hilang total", "Kedua potongan meledak"],
-                correct: 0,
-                tip: "Kutub magnet selalu berpasangan (dipol) dan tidak bisa dipisah menjadi tunggal (monopol).",
-                scientist: "James Clerk Maxwell",
-                era: "Abad 19",
-                desc: "Penyatu listrik, magnet, dan cahaya dalam 4 Persamaan Gelombang Maxwell.",
-                type: "magnet"
-            },
-            {
-                id: 7,
-                question: "Siapakah genius pelopor sistem arus listrik bolak-balik (AC) yang digunakan mendistribusikan listrik jarak jauh ke rumah kita saat ini?",
-                options: ["Nikola Tesla", "Alessandro Volta", "Benjamin Franklin", "Andre-Marie Ampere"],
-                correct: 0,
-                tip: "Listrik AC efisien ditransmisikan pada jarak jauh melalui transformasi tegangan.",
-                scientist: "Nikola Tesla",
-                era: "Abad 19-20",
-                desc: "Penemu & insinyur visioner pencipta motor induksi AC.",
-                type: "ac_current"
-            },
-            {
-                id: 8,
-                question: "Mengapa es batu terasa dingin saat kita sentuh dengan tangan telanjang?",
-                options: ["Kalor dari tangan mengalir alami menuju ke es", "Es memancarkan gelombang dingin ke kulit", "Es menyerap oksigen tangan", "Gesekan kulit menciptakan dingin"],
-                correct: 0,
-                tip: "Energi termal (kalor) mengalir spontan dari suhu tinggi ke suhu rendah.",
-                scientist: "Lord Kelvin",
-                era: "Abad 19",
-                desc: "Pencetus skala suhu mutlak Kelvin & Hukum Termodinamika.",
-                type: "heat"
-            },
-            {
-                id: 9,
-                question: "Pensil dalam gelas berisi air jernih terlihat bengkok atau patah. Fenomena apakah ini dan siapa pelopor teori gelombang cahaya?",
-                options: ["Pembiasan (Refraksi) - Christiaan Huygens", "Pemantulan - Isaac Newton", "Konduksi - Blaise Pascal", "Radiasi - Marie Curie"],
-                correct: 0,
-                tip: "Cahaya membelok karena mengalami perubahan kecepatan pada medium beda kerapatan.",
-                scientist: "Christiaan Huygens",
-                era: "Abad 17",
-                desc: "Ilmuwan Belanda pencetus Teori Gelombang Cahaya.",
-                type: "refraction"
-            },
-            {
-                id: 10,
-                question: "Tekanan yang diberikan pada zat cair dalam ruang tertutup akan diteruskan ke segala arah sama besar. Ini adalah prinsip dari...",
-                options: ["Blaise Pascal", "Torricelli", "Robert Boyle", "Daniel Bernoulli"],
-                correct: 0,
-                tip: "Hukum Pascal menjadi fondasi rem hidrolik mobil dan dongkrak berat.",
-                scientist: "Blaise Pascal",
-                era: "Abad 17",
-                desc: "Matematikawan & fisikawan Prancis pencetus Hukum Hidrolik.",
-                type: "pascal"
-            },
-            {
-                id: 11,
-                question: "Mengapa pesawat terbang yang berat bisa terangkat di udara saat melaju kencang di landasan?",
-                options: ["Tekanan udara atas sayap lebih kecil dari bawah (Bernoulli)", "Gaya magnetik bumi", "Inersia massa pesawat", "Hukum Pemuaian Gas"],
-                correct: 0,
-                tip: "Kecepatan udara tinggi di atas sayap lengkung menurunkan tekanan udara di bagian atas.",
-                scientist: "Daniel Bernoulli",
-                era: "Abad 18",
-                desc: "Pencetus Prinsip Dinamika Fluida dan tekanan aliran udara.",
-                type: "bernoulli"
-            },
-            {
-                id: 12,
-                question: "Siapakah ilmuwan wanita pertama penemu unsur radioaktif Polonium dan Radium yang memenangkan 2 Hadiah Nobel?",
-                options: ["Marie Curie", "Lise Meitner", "Rosalind Franklin", "Ada Lovelace"],
-                correct: 0,
-                tip: "Riset radioaktivitasnya menjadi fondasi pengobatan medis radioterapi kanker.",
-                scientist: "Marie Curie",
-                era: "Abad 19-20",
-                desc: "Pelopor riset radioaktivitas dunia pemenang 2 Nobel Sains.",
-                type: "radiation"
-            },
-            {
-                id: 13,
-                question: "Siapakah perumus model atom di mana elektron beredar mengelilingi inti atom pada lintasan/orbit tingkat energi tertentu?",
-                options: ["Niels Bohr", "John Dalton", "Ernest Rutherford", "J.J. Thomson"],
-                correct: 0,
-                tip: "Elektron dapat berpindah orbit dengan memancarkan atau menyerap kuanta energi.",
-                scientist: "Niels Bohr",
-                era: "Abad 20",
-                desc: "Fisikawan Denmark pelopor Struktur Atom Kuantum.",
-                type: "atom"
-            },
-            {
-                id: 14,
-                question: "Eksperimen pikiran 'Kucing dalam Kotak' digunakan menjelaskan konsep superposisi kuantum. Siapakah perumusnya?",
-                options: ["Erwin Schrödinger", "Werner Heisenberg", "Max Planck", "Albert Einstein"],
-                correct: 0,
-                tip: "Partikel kuantum berada dalam banyak kemungkinan kondisi sebelum dilakukan observasi.",
-                scientist: "Erwin Schrödinger",
-                era: "Abad 20",
-                desc: "Fisikawan Austria perumus Persamaan Gelombang Kuantum.",
-                type: "schrodinger"
-            },
-            {
-                id: 15,
-                question: "Siapakah pembukti keberadaan gelombang elektromagnetik tak kasat mata (seperti sinyal radio & Wi-Fi) pertama kali?",
-                options: ["Heinrich Hertz", "Guglielmo Marconi", "Alexander Graham Bell", "Wilhelm Röntgen"],
-                correct: 0,
-                tip: "Namanya diabadikan sebagai satuan frekuensi gelombang internasional (Hz).",
-                scientist: "Heinrich Hertz",
-                era: "Abad 19",
-                desc: "Fisikawan Jerman pembukti kebenaran teori gelombang EM Maxwell.",
-                type: "wave"
-            },
-            {
-                id: 16,
-                question: "Siapakah pencipta Barometer raksa pertama yang membuktikan bahwa udara atmosfer memiliki berat dan tekanan?",
-                options: ["Evangelista Torricelli", "Robert Hooke", "Blaise Pascal", "Galileo Galilei"],
-                correct: 0,
-                tip: "Tekanan udara menopang kolom raksa setinggi 76 cm pada permukaan laut.",
-                scientist: "Evangelista Torricelli",
-                era: "Abad 17",
-                desc: "Fisikawan Italia murid Galileo penemu Barometer.",
-                type: "barometer"
-            },
-            {
-                id: 17,
-                question: "Mengapa lintasan planet mengelilingi Matahari berbentuk elips lonjong dan bukan lingkaran sempurna? Hukum siapakah ini?",
-                options: ["Johannes Kepler", "Nicolaus Copernicus", "Tycho Brahe", "Edmond Halley"],
-                correct: 0,
-                tip: "Matahari berada pada salah satu titik fokus dari lintasan elips planet.",
-                scientist: "Johannes Kepler",
-                era: "Abad 17",
-                desc: "Astronom Jerman pencetus 3 Hukum Gerak Planet.",
-                type: "kepler"
-            },
-            {
-                id: 18,
-                question: "Jika volume gas diperkecil dalam wadah tertutup, tekanan gas akan meningkat berbanding terbalik. Hukum siapakah ini?",
-                options: ["Robert Boyle", "Amedeo Avogadro", "Gay-Lussac", "Jacques Charles"],
-                correct: 0,
-                tip: "Partikel gas yang makin makin berdempetan akan lebih sering menumbuk dinding wadah.",
-                scientist: "Robert Boyle",
-                era: "Abad 17",
-                desc: "Pencetus Hukum Tekanan dan Volume Gas Terisolasi.",
-                type: "boyle"
-            },
-            {
-                id: 19,
-                question: "Siapakah pencipta Baterai Kimia (Elemen Volta) pertama sebagai sumber arus listrik searah (DC) berkelanjutan?",
-                options: ["Alessandro Volta", "Luigi Galvani", "Coulomb", "Georg Ohm"],
-                correct: 0,
-                tip: "Tumpukan lempeng seng dan tembaga dengan asam menghasilkan aliran elektron.",
-                scientist: "Alessandro Volta",
-                era: "Abad 18-19",
-                desc: "Fisikawan Italia penemu Baterai Listrik, namanya diabadikan jadi 'Volt'.",
-                type: "battery"
-            },
-            {
-                id: 20,
-                question: "Siapakah penemu Sinar-X berenergi tinggi yang dapat menembus kulit untuk pemindaian struktur tulang medis?",
-                options: ["Wilhelm Röntgen", "Henri Becquerel", "Ernest Rutherford", "J.J. Thomson"],
-                correct: 0,
-                tip: "Penemuannya dianugerahi Hadiah Nobel Fisika pertama pada tahun 1901.",
-                scientist: "Wilhelm Röntgen",
-                era: "Abad 19-20",
-                desc: "Fisikawan Jerman penemu Radiasi Elektromagnetik Sinar-X.",
-                type: "xray"
+                soal: "Kecepatan cahaya di ruang hampa adalah sekitar...",
+                opsi: ["300.000 km/s", "150.000 km/s", "1.000 km/s", "3.000 km/s"],
+                jawaban: 0
             }
         ];
 
-        function getRoomDocRef(code) {
-            return db.collection('artifacts').doc(appId).collection('public').doc('data').collection('quiz_rooms').doc(code);
-        }
-
-        function generateCode() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            let res = '';
-            for (let i = 0; i < 6; i++) {
-                res += chars.charAt(Math.floor(Math.random() * chars.length));
+        function buatRuangan() {
+            const namaInput = document.getElementById('input-nama').value.trim();
+            if (!namaInput) {
+                alert('Harap masukkan nama Anda terlebih dahulu!');
+                return;
             }
-            return res;
+            const roomCode = 'FSK' + Math.floor(100 + Math.random() * 900);
+            document.getElementById('input-room').value = roomCode;
+            gabungRuangan();
         }
 
-        window.createRoom = async function() {
-            if (isActionPending) return;
-            const nameInput = document.getElementById('player-name-input').value.trim();
-            if (!nameInput) {
-                showToast("Masukkan nama Anda terlebih dahulu!");
+        function gabungRuangan() {
+            playerNama = document.getElementById('input-nama').value.trim();
+            currentRoom = document.getElementById('input-room').value.trim().toUpperCase();
+
+            if (!playerNama || !currentRoom) {
+                alert('Harap isi Nama dan Kode Ruangan!');
                 return;
             }
 
-            isActionPending = true;
-            const code = generateCode();
-            currentRoomCode = code;
-            isHost = true;
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('screen-quiz').classList.remove('hidden');
+            document.getElementById('label-ruangan').innerText = 'Ruangan: ' + currentRoom;
 
-            const roomData = {
-                code: code,
-                hostId: currentUser.uid,
-                status: 'waiting',
-                currentQuestionIndex: 0,
-                questionStartTime: Date.now(),
-                players: {
-                    [currentUser.uid]: {
-                        name: nameInput,
-                        score: 0,
-                        isHost: true,
-                        lastAnsweredIndex: -1
-                    }
-                },
-                createdAt: Date.now()
-            };
+            tampilkanSoal();
+        }
 
-            try {
-                if (isFirebaseActive) {
-                    await getRoomDocRef(code).set(roomData);
-                    listenToRoom(code);
-                } else {
-                    localRoomsState[code] = roomData;
-                    renderLocalRoomState(code);
-                }
-                
-                showView('view-waiting');
-                document.getElementById('display-room-code').innerText = code;
-                document.getElementById('waiting-room-code').innerText = code;
-                document.getElementById('room-code-badge').classList.remove('hidden');
-                showToast("Ruangan kuis berhasil dibuat!", false);
-            } catch (e) {
-                console.error("Gagal buat ruangan:", e);
-                showToast("Gagal terhubung server, beralih ke mode simulasi lokal.");
-                localRoomsState[code] = roomData;
-                renderLocalRoomState(code);
-                showView('view-waiting');
-            } finally {
-                isActionPending = false;
-            }
-        };
-
-        window.joinRoom = async function() {
-            if (isActionPending) return;
-            const nameInput = document.getElementById('player-name-input').value.trim();
-            const codeInput = document.getElementById('room-code-input').value.trim().toUpperCase();
-
-            if (!nameInput) {
-                showToast("Masukkan Nama kamu terlebih dahulu!");
-                return;
-            }
-            if (!codeInput || codeInput.length < 5) {
-                showToast("Masukkan Kode Ruangan yang valid!");
+        function tampilkanSoal() {
+            if (indexSoal >= daftarSoal.length) {
+                selesaiKuis();
                 return;
             }
 
-            isActionPending = true;
-            currentRoomCode = codeInput;
+            const item = daftarSoal[indexSoal];
+            document.getElementById('teks-soal').innerText = `${indexSoal + 1}. ${item.soal}`;
+            const containerOpsi = document.getElementById('opsi-jawaban');
+            containerOpsi.innerHTML = '';
 
-            try {
-                if (isFirebaseActive) {
-                    const ref = getRoomDocRef(codeInput);
-                    const snap = await ref.get();
-
-                    if (!snap.exists) {
-                        showToast("Kode ruangan '" + codeInput + "' tidak ditemukan!");
-                        isActionPending = false;
-                        return;
-                    }
-
-                    const data = snap.data();
-                    isHost = (data.hostId === currentUser.uid);
-
-                    const updatedPlayers = { ...data.players };
-                    updatedPlayers[currentUser.uid] = {
-                        name: nameInput,
-                        score: updatedPlayers[currentUser.uid]?.score || 0,
-                        isHost: isHost,
-                        lastAnsweredIndex: updatedPlayers[currentUser.uid]?.lastAnsweredIndex ?? -1
-                    };
-
-                    await ref.update({ players: updatedPlayers });
-                    listenToRoom(codeInput);
-
-                    if (data.status === 'waiting') showView('view-waiting');
-                    else if (data.status === 'playing') showView('view-game');
-                    else showView('view-leaderboard');
-                } else {
-                    let room = localRoomsState[codeInput];
-                    if (!room) {
-                        room = {
-                            code: codeInput,
-                            hostId: 'host_demo',
-                            status: 'waiting',
-                            currentQuestionIndex: 0,
-                            questionStartTime: Date.now(),
-                            players: {}
-                        };
-                        localRoomsState[codeInput] = room;
-                    }
-                    isHost = false;
-                    room.players[currentUser.uid] = { name: nameInput, score: 0, isHost: false, lastAnsweredIndex: -1 };
-                    renderLocalRoomState(codeInput);
-                    showView('view-waiting');
-                }
-
-                document.getElementById('display-room-code').innerText = codeInput;
-                document.getElementById('room-code-badge').classList.remove('hidden');
-                showToast("Berhasil bergabung ke kuis!", false);
-            } catch (err) {
-                console.error("Join error:", err);
-                showToast("Gagal bergabung ke server.");
-            } finally {
-                isActionPending = false;
-            }
-        };
-
-        function listenToRoom(code) {
-            if (roomUnsubscribe) roomUnsubscribe();
-
-            roomUnsubscribe = getRoomDocRef(code).onSnapshot((snap) => {
-                if (!snap.exists) return;
-                const room = snap.data();
-                updateUIWithRoomData(room);
-            }, (err) => {
-                console.error("Snapshot error:", err);
-            });
-        }
-
-        function renderLocalRoomState(code) {
-            const room = localRoomsState[code];
-            if (room) updateUIWithRoomData(room);
-        }
-
-        function updateUIWithRoomData(room) {
-            document.getElementById('waiting-room-code').innerText = room.code;
-            const playerArray = Object.values(room.players || {});
-            document.getElementById('player-count').innerText = playerArray.length;
-            
-            const playersListEl = document.getElementById('players-list');
-            playersListEl.innerHTML = playerArray.map(p => `
-                <span class="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-semibold flex items-center space-x-1.5 shadow-sm">
-                    <i class="fa-solid fa-user-astronaut text-cyan-400"></i>
-                    <span>${escapeHtml(p.name)}</span>
-                    ${p.isHost ? '<span class="text-[10px] bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-1 rounded">Host</span>' : ''}
-                </span>
-            `).join('');
-
-            if (isHost) {
-                document.getElementById('host-controls').classList.remove('hidden');
-                document.getElementById('non-host-msg').classList.add('hidden');
-                document.getElementById('next-question-host-control').classList.remove('hidden');
-                document.getElementById('next-question-wait-msg').classList.add('hidden');
-            } else {
-                document.getElementById('host-controls').classList.add('hidden');
-                document.getElementById('non-host-msg').classList.remove('hidden');
-                document.getElementById('next-question-host-control').classList.add('hidden');
-                document.getElementById('next-question-wait-msg').classList.remove('hidden');
-            }
-
-            if (room.status === 'waiting') {
-                showView('view-waiting');
-            } else if (room.status === 'playing') {
-                showView('view-game');
-                renderQuestion(room.currentQuestionIndex, room.questionStartTime, room.players);
-            } else if (room.status === 'leaderboard') {
-                showView('view-leaderboard');
-                renderLeaderboard(room.players, room.currentQuestionIndex >= quizBank.length - 1, room.currentQuestionIndex);
-            } else if (room.status === 'ended') {
-                showView('view-leaderboard');
-                renderLeaderboard(room.players, true, room.currentQuestionIndex);
-            }
-        }
-
-        window.startGame = async function() {
-            if (!isHost || !currentRoomCode || isActionPending) return;
-            isActionPending = true;
-
-            try {
-                if (isFirebaseActive) {
-                    await getRoomDocRef(currentRoomCode).update({
-                        status: 'playing',
-                        currentQuestionIndex: 0,
-                        questionStartTime: Date.now()
-                    });
-                } else {
-                    localRoomsState[currentRoomCode].status = 'playing';
-                    localRoomsState[currentRoomCode].currentQuestionIndex = 0;
-                    localRoomsState[currentRoomCode].questionStartTime = Date.now();
-                    renderLocalRoomState(currentRoomCode);
-                }
-            } catch (err) {
-                console.error(err);
-            } finally {
-                isActionPending = false;
-            }
-        };
-
-        function renderQuestion(qIndex, startTime, playersMap) {
-            const quiz = quizBank[qIndex];
-            if (!quiz) return;
-
-            const myPlayerData = playersMap && currentUser ? playersMap[currentUser.uid] : null;
-            const alreadyAnsweredInServer = myPlayerData && myPlayerData.lastAnsweredIndex === qIndex;
-
-            if (currentDisplayedQIndex !== qIndex) {
-                currentDisplayedQIndex = qIndex;
-                hasAnsweredCurrentQuestion = alreadyAnsweredInServer;
-
-                document.getElementById('quiz-progress-text').innerText = `Soal ${qIndex + 1} / ${quizBank.length}`;
-                document.getElementById('question-text').innerText = quiz.question;
-                
-                document.getElementById('scientist-name').innerText = quiz.scientist;
-                document.getElementById('scientist-era').innerText = quiz.era;
-                document.getElementById('scientist-desc').innerText = quiz.desc;
-
-                const feedbackBox = document.getElementById('feedback-box');
-                feedbackBox.classList.add('hidden');
-
-                const optionLetters = ['A', 'B', 'C', 'D'];
-                const optionsContainer = document.getElementById('options-container');
-                optionsContainer.innerHTML = quiz.options.map((opt, i) => `
-                    <button onclick="submitAnswer(${i})" id="opt-btn-${i}" class="answer-btn p-4 bg-slate-800/90 hover:bg-indigo-900/60 border border-slate-700 hover:border-indigo-500 rounded-2xl text-left transition-all flex items-start space-x-3 group">
-                        <span class="w-7 h-7 rounded-xl bg-slate-700 group-hover:bg-indigo-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0 transition-colors">${optionLetters[i]}</span>
-                        <span class="text-xs md:text-sm font-semibold text-slate-200 group-hover:text-white pt-0.5">${escapeHtml(opt)}</span>
-                    </button>
-                `).join('');
-
-                initPhysicsVisualization(quiz.type);
-            }
-
-            if (alreadyAnsweredInServer) {
-                hasAnsweredCurrentQuestion = true;
-                for (let i = 0; i < 4; i++) {
-                    const btn = document.getElementById(`opt-btn-${i}`);
-                    if (btn) btn.disabled = true;
-                }
-            }
-
-            startTimer(startTime, QUESTION_DURATION);
-        }
-
-        window.submitAnswer = async function(selectedIndex) {
-            if (hasAnsweredCurrentQuestion || !currentRoomCode) return;
-            hasAnsweredCurrentQuestion = true;
-
-            for (let i = 0; i < 4; i++) {
-                const btn = document.getElementById(`opt-btn-${i}`);
-                if (btn) btn.disabled = true;
-            }
-
-            try {
-                let room = null;
-                if (isFirebaseActive) {
-                    const snap = await getRoomDocRef(currentRoomCode).get();
-                    if (snap.exists) room = snap.data();
-                } else {
-                    room = localRoomsState[currentRoomCode];
-                }
-
-                if (!room) return;
-
-                const qIndex = room.currentQuestionIndex;
-                const quiz = quizBank[qIndex];
-                const isCorrect = (selectedIndex === quiz.correct);
-
-                let pointsEarned = 0;
-                if (isCorrect) {
-                    const timeTaken = Math.max(0.5, (Date.now() - room.questionStartTime) / 1000);
-                    const speedBonus = Math.max(0, Math.floor((QUESTION_DURATION - timeTaken) * 10));
-                    pointsEarned = 100 + speedBonus;
-                    if (typeof confetti === 'function') confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
-                }
-
-                for (let i = 0; i < 4; i++) {
-                    const btn = document.getElementById(`opt-btn-${i}`);
-                    if (btn) {
-                        if (i === quiz.correct) {
-                            btn.className = "p-4 bg-emerald-950/80 border-2 border-emerald-500 rounded-2xl text-left flex items-start space-x-3 text-emerald-200 shadow-lg shadow-emerald-950/50";
-                            btn.innerHTML = `
-                                <span class="w-7 h-7 rounded-xl bg-emerald-500 text-slate-950 font-bold flex items-center justify-center text-xs flex-shrink-0">
-                                    <i class="fa-solid fa-check"></i>
-                                </span>
-                                <div class="flex-grow">
-                                    <span class="text-xs md:text-sm font-bold text-emerald-300 block">${escapeHtml(quiz.options[i])}</span>
-                                    <span class="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">(Jawaban Benar)</span>
-                                </div>
-                            `;
-                        } else if (i === selectedIndex && !isCorrect) {
-                            btn.className = "p-4 bg-rose-950/80 border-2 border-rose-500 rounded-2xl text-left flex items-start space-x-3 text-rose-200 shadow-lg shadow-rose-950/50";
-                            btn.innerHTML = `
-                                <span class="w-7 h-7 rounded-xl bg-rose-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </span>
-                                <div class="flex-grow">
-                                    <span class="text-xs md:text-sm font-bold text-rose-300 block">${escapeHtml(quiz.options[i])}</span>
-                                    <span class="text-[10px] text-rose-400 font-semibold uppercase tracking-wider">(Pilihanmu - Salah)</span>
-                                </div>
-                            `;
-                        } else {
-                            btn.className = "p-4 bg-slate-900/30 border border-slate-800 rounded-2xl text-left flex items-start space-x-3 opacity-30";
-                        }
-                    }
-                }
-
-                const feedbackBox = document.getElementById('feedback-box');
-                feedbackBox.classList.remove('hidden');
-                if (isCorrect) {
-                    feedbackBox.className = "p-4 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl text-emerald-300 text-center animate-bounce space-y-1";
-                    feedbackBox.innerHTML = `
-                        <div class="font-bold text-sm"><i class="fa-solid fa-circle-check text-lg mr-1.5"></i> Jawaban Benar! (+${pointsEarned} Poin)</div>
-                        <p class="text-xs text-emerald-200/80 font-normal italic">${escapeHtml(quiz.tip || "")}</p>
-                    `;
-                } else {
-                    feedbackBox.className = "p-4 bg-rose-500/20 border border-rose-500/40 rounded-2xl text-rose-300 text-center space-y-1";
-                    feedbackBox.innerHTML = `
-                        <div class="font-bold text-sm"><i class="fa-solid fa-circle-xmark text-lg mr-1.5"></i> Jawaban Kurang Tepat!</div>
-                        <p class="text-xs text-rose-200/90 font-normal italic">${escapeHtml(quiz.tip || "")}</p>
-                    `;
-                }
-
-                const updatedPlayers = { ...room.players };
-                if (updatedPlayers[currentUser.uid]) {
-                    updatedPlayers[currentUser.uid].score = (updatedPlayers[currentUser.uid].score || 0) + pointsEarned;
-                    updatedPlayers[currentUser.uid].lastAnsweredIndex = qIndex;
-                    
-                    if (isFirebaseActive) {
-                        await getRoomDocRef(currentRoomCode).update({ players: updatedPlayers });
-                    } else {
-                        localRoomsState[currentRoomCode].players = updatedPlayers;
-                    }
-                }
-            } catch (err) {
-                console.error("Gagal mengirim jawaban:", err);
-            }
-        };
-
-        function startTimer(startTime, durationSeconds) {
-            clearInterval(timerInterval);
-            const timerBar = document.getElementById('timer-bar');
-            const timerText = document.getElementById('timer-text');
-
-            timerInterval = setInterval(() => {
-                const elapsed = (Date.now() - startTime) / 1000;
-                const remaining = Math.max(0, durationSeconds - elapsed);
-                const percent = (remaining / durationSeconds) * 100;
-
-                if (timerBar) timerBar.style.width = `${percent}%`;
-                if (timerText) timerText.innerText = `${Math.ceil(remaining)}s`;
-
-                if (remaining <= 0) {
-                    clearInterval(timerInterval);
-                    if (!hasAnsweredCurrentQuestion) {
-                        hasAnsweredCurrentQuestion = true;
-                        for (let i = 0; i < 4; i++) {
-                            const btn = document.getElementById(`opt-btn-${i}`);
-                            if (btn) btn.disabled = true;
-                        }
-                    }
-                    if (isHost && currentRoomCode) {
-                        if (isFirebaseActive) {
-                            getRoomDocRef(currentRoomCode).update({ status: 'leaderboard' }).catch(console.error);
-                        } else {
-                            localRoomsState[currentRoomCode].status = 'leaderboard';
-                            renderLocalRoomState(currentRoomCode);
-                        }
-                    }
-                }
-            }, 200);
-        }
-
-        window.nextQuestion = async function() {
-            if (!isHost || !currentRoomCode || isActionPending) return;
-            isActionPending = true;
-
-            try {
-                let room = null;
-                if (isFirebaseActive) {
-                    const snap = await getRoomDocRef(currentRoomCode).get();
-                    if (snap.exists) room = snap.data();
-                } else {
-                    room = localRoomsState[currentRoomCode];
-                }
-
-                if (!room) return;
-                const nextIdx = room.currentQuestionIndex + 1;
-
-                if (nextIdx < quizBank.length) {
-                    if (isFirebaseActive) {
-                        await getRoomDocRef(currentRoomCode).update({
-                            status: 'playing',
-                            currentQuestionIndex: nextIdx,
-                            questionStartTime: Date.now()
-                        });
-                    } else {
-                        localRoomsState[currentRoomCode].status = 'playing';
-                        localRoomsState[currentRoomCode].currentQuestionIndex = nextIdx;
-                        localRoomsState[currentRoomCode].questionStartTime = Date.now();
-                        renderLocalRoomState(currentRoomCode);
-                    }
-                } else {
-                    if (isFirebaseActive) {
-                        await getRoomDocRef(currentRoomCode).update({ status: 'ended' });
-                    } else {
-                        localRoomsState[currentRoomCode].status = 'ended';
-                        renderLocalRoomState(currentRoomCode);
-                    }
-                }
-            } catch (err) {
-                console.error(err);
-            } finally {
-                isActionPending = false;
-            }
-        };
-
-        window.resetRoom = async function() {
-            if (!isHost || isActionPending) return;
-            isActionPending = true;
-
-            try {
-                const newCode = generateCode();
-                let oldPlayers = {};
-                
-                if (isFirebaseActive) {
-                    const snap = await getRoomDocRef(currentRoomCode).get();
-                    oldPlayers = snap.exists ? snap.data().players : {};
-                } else {
-                    oldPlayers = localRoomsState[currentRoomCode]?.players || {};
-                }
-
-                Object.keys(oldPlayers).forEach(k => {
-                    oldPlayers[k].score = 0;
-                    oldPlayers[k].lastAnsweredIndex = -1;
-                });
-
-                currentRoomCode = newCode;
-                currentDisplayedQIndex = -1;
-
-                const newRoomObj = {
-                    code: newCode,
-                    hostId: currentUser.uid,
-                    status: 'waiting',
-                    currentQuestionIndex: 0,
-                    questionStartTime: 0,
-                    players: oldPlayers,
-                    createdAt: Date.now()
+            item.opsi.forEach((opsiText, idx) => {
+                const btn = document.createElement('button');
+                btn.type = "button";
+                btn.className = "w-full text-left p-3 rounded-lg bg-slate-700 hover:bg-cyan-600 transition border border-slate-600 cursor-pointer";
+                btn.innerText = opsiText;
+                btn.onclick = function() {
+                    pilihJawaban(idx);
                 };
-
-                if (isFirebaseActive) {
-                    await getRoomDocRef(newCode).set(newRoomObj);
-                    listenToRoom(newCode);
-                } else {
-                    localRoomsState[newCode] = newRoomObj;
-                    renderLocalRoomState(newCode);
-                }
-
-                document.getElementById('display-room-code').innerText = newCode;
-                document.getElementById('waiting-room-code').innerText = newCode;
-                showToast("Kode ruangan diperbarui: " + newCode, false);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                isActionPending = false;
-            }
-        };
-
-        window.leaveRoom = function() {
-            if (roomUnsubscribe) roomUnsubscribe();
-            currentRoomCode = null;
-            currentDisplayedQIndex = -1;
-            showView('view-lobby');
-            document.getElementById('room-code-badge').classList.add('hidden');
-        };
-
-        function renderLeaderboard(playersMap, isFinal, currentQIdx = 0) {
-            const listEl = document.getElementById('leaderboard-list');
-            const titleEl = document.getElementById('leaderboard-title');
-            const subEl = document.getElementById('leaderboard-subtitle');
-            const hostPanel = document.getElementById('host-answer-key-panel');
-
-            if (isHost && quizBank[currentQIdx]) {
-                const quiz = quizBank[currentQIdx];
-                hostPanel.classList.remove('hidden');
-                document.getElementById('host-key-question-num').innerText = `Soal #${currentQIdx + 1}`;
-                
-                const optionLetters = ['A', 'B', 'C', 'D'];
-                document.getElementById('host-key-options-list').innerHTML = quiz.options.map((opt, i) => {
-                    const isCorrect = (i === quiz.correct);
-                    return `
-                        <div class="p-2 rounded-xl border flex items-center space-x-2 ${isCorrect ? 'bg-emerald-900/60 border-emerald-500 text-emerald-200 font-bold' : 'bg-slate-900/50 border-slate-800 text-slate-400'}">
-                            <span class="w-5 h-5 rounded-lg ${isCorrect ? 'bg-emerald-500 text-slate-950' : 'bg-slate-700 text-slate-300'} flex items-center justify-center text-[10px] flex-shrink-0 font-bold">${optionLetters[i]}</span>
-                            <span class="truncate">${escapeHtml(opt)}</span>
-                            ${isCorrect ? '<i class="fa-solid fa-check text-emerald-400 ml-auto"></i>' : ''}
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                hostPanel.classList.add('hidden');
-            }
-
-            if (isFinal) {
-                titleEl.innerText = "🏆 Pemenang Kuis Fisika!";
-                subEl.innerText = "Selamat kepada para juara pemaham konsep & tokoh fisika!";
-                document.getElementById('next-question-host-control').classList.add('hidden');
-                document.getElementById('next-question-wait-msg').classList.add('hidden');
-                document.getElementById('game-over-controls').classList.remove('hidden');
-                if (typeof confetti === 'function') confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
-            } else {
-                titleEl.innerText = "Papan Skor Sementara";
-                subEl.innerText = "Persaingan semakin seru! Siapa yang berada di puncak?";
-                document.getElementById('game-over-controls').classList.add('hidden');
-            }
-
-            const players = Object.values(playersMap || {}).sort((a, b) => b.score - a.score);
-
-            listEl.innerHTML = players.map((p, idx) => {
-                let badgeClass = "bg-slate-800 text-slate-300";
-                let rankIcon = `<span class="font-bold text-sm">${idx + 1}</span>`;
-
-                if (idx === 0) {
-                    badgeClass = "bg-yellow-500/20 text-yellow-300 border border-yellow-500/40";
-                    rankIcon = `<i class="fa-solid fa-crown text-yellow-400"></i>`;
-                } else if (idx === 1) {
-                    badgeClass = "bg-slate-300/20 text-slate-200 border border-slate-300/40";
-                    rankIcon = `<i class="fa-solid fa-medal text-slate-300"></i>`;
-                } else if (idx === 2) {
-                    badgeClass = "bg-amber-700/20 text-amber-400 border border-amber-700/40";
-                    rankIcon = `<i class="fa-solid fa-award text-amber-500"></i>`;
-                }
-
-                return `
-                    <div class="grid grid-cols-12 p-3 items-center text-sm ${idx % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-900/80'}">
-                        <div class="col-span-2 text-center flex justify-center">
-                            <div class="w-7 h-7 rounded-lg ${badgeClass} flex items-center justify-center">
-                                ${rankIcon}
-                            </div>
-                        </div>
-                        <div class="col-span-7 font-semibold text-slate-200 flex items-center space-x-2">
-                            <span>${escapeHtml(p.name)}</span>
-                            ${p.isHost ? '<span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded">Host</span>' : ''}
-                        </div>
-                        <div class="col-span-3 text-right font-mono font-bold text-yellow-400">
-                            ${p.score} pt
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        let animFrameId = null;
-        function initPhysicsVisualization(type) {
-            const canvas = document.getElementById('physics-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            
-            canvas.width = canvas.clientWidth || 300;
-            canvas.height = canvas.clientHeight || 200;
-
-            if (animFrameId) cancelAnimationFrame(animFrameId);
-            let tick = 0;
-
-            function animate() {
-                tick += 0.04;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const cx = canvas.width / 2;
-                const cy = canvas.height / 2;
-
-                if (type === 'inertia' || type === 'freefall') {
-                    ctx.fillStyle = '#6366f1';
-                    ctx.beginPath();
-                    const dropY = (cy - 35) + Math.abs(Math.sin(tick * 2)) * 70;
-                    ctx.arc(cx, dropY, 16, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    ctx.strokeStyle = '#94a3b8';
-                    ctx.setLineDash([4, 4]);
-                    ctx.beginPath();
-                    ctx.moveTo(cx, cy - 35);
-                    ctx.lineTo(cx, cy + 35);
-                    ctx.stroke();
-                    ctx.setLineDash([]);
-                } else if (type === 'buoyancy' || type === 'pascal' || type === 'bernoulli') {
-                    ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
-                    ctx.fillRect(cx - 70, cy - 10, 140, 60);
-
-                    const floatY = cy - 18 + Math.sin(tick * 1.5) * 5;
-                    ctx.fillStyle = '#f59e0b';
-                    ctx.fillRect(cx - 25, floatY, 50, 25);
-                } else if (type === 'orbit' || type === 'kepler' || type === 'atom') {
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-                    ctx.beginPath();
-                    ctx.ellipse(cx, cy, 60, 30, 0, 0, Math.PI * 2);
-                    ctx.stroke();
-
-                    const orbX = cx + Math.cos(tick * 1.2) * 60;
-                    const orbY = cy + Math.sin(tick * 1.2) * 30;
-
-                    ctx.fillStyle = '#f43f5e';
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, 12, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    ctx.fillStyle = '#38bdf8';
-                    ctx.beginPath();
-                    ctx.arc(orbX, orbY, 7, 0, Math.PI * 2);
-                    ctx.fill();
-                } else if (type === 'magnet' || type === 'induction' || type === 'ac_current') {
-                    const shift = Math.sin(tick) * 8;
-                    ctx.fillStyle = '#ef4444';
-                    ctx.fillRect(cx - 50 - shift, cy - 12, 40, 24);
-                    ctx.fillStyle = '#3b82f6';
-                    ctx.fillRect(cx - 10 - shift, cy - 12, 40, 24);
-
-                    ctx.fillStyle = '#ffffff';
-                    ctx.font = 'bold 11px sans-serif';
-                    ctx.fillText('U', cx - 35 - shift, cy + 4);
-                    ctx.fillText('S', cx + 5 - shift, cy + 4);
-                } else {
-                    ctx.strokeStyle = '#a855f7';
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    for (let x = -70; x <= 70; x += 5) {
-                        const y = Math.sin((x * 0.1) + (tick * 3)) * 18;
-                        if (x === -70) ctx.moveTo(cx + x, cy + y);
-                        else ctx.lineTo(cx + x, cy + y);
-                    }
-                    ctx.stroke();
-                }
-
-                animFrameId = requestAnimationFrame(animate);
-            }
-
-            animate();
-        }
-
-        function showView(viewId) {
-            ['view-lobby', 'view-waiting', 'view-game', 'view-leaderboard'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.classList.add('hidden');
+                containerOpsi.appendChild(btn);
             });
-            const target = document.getElementById(viewId);
-            if (target) target.classList.remove('hidden');
         }
 
-        function escapeHtml(str) {
-            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
-
-        window.copyRoomCode = function() {
-            if (!currentRoomCode) return;
-            const temp = document.createElement('input');
-            document.body.appendChild(temp);
-            temp.value = currentRoomCode;
-            temp.select();
-            document.execCommand('copy');
-            document.body.removeChild(temp);
-            showToast("Kode ruangan " + currentRoomCode + " disalin!", false);
-        };
-
-        window.copyShareLink = function() {
-            if (!currentRoomCode) return;
-            const link = window.location.origin + window.location.pathname + "?room=" + currentRoomCode;
-            const temp = document.createElement('input');
-            document.body.appendChild(temp);
-            temp.value = link;
-            temp.select();
-            document.execCommand('copy');
-            document.body.removeChild(temp);
-            showToast("Link ruangan disalin!", false);
-        };
-
-        // Otomatis cek URL parameter room
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const roomParam = urlParams.get('room');
-            if (roomParam) {
-                document.getElementById('room-code-input').value = roomParam.trim().toUpperCase();
+        function pilihJawaban(idx) {
+            if (idx === daftarSoal[indexSoal].jawaban) {
+                currentSkor += 10;
+                document.getElementById('label-skor').innerText = 'Skor: ' + currentSkor;
             }
-        });
+            indexSoal++;
+            tampilkanSoal();
+        }
+
+        function selesaiKuis() {
+            document.getElementById('screen-quiz').classList.add('hidden');
+            document.getElementById('screen-leaderboard').classList.remove('hidden');
+
+            const containerSkor = document.getElementById('daftar-skor');
+            containerSkor.innerHTML = `
+                <div class="flex justify-between items-center bg-slate-700 p-3 rounded-lg border border-cyan-500/50">
+                    <span class="font-bold text-cyan-300">1. ${playerNama} (Anda)</span>
+                    <span class="font-bold text-yellow-400">${currentSkor} Poin</span>
+                </div>
+            `;
+        }
     </script>
 </body>
 </html>
