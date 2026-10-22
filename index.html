@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FisikaLab Pro - Kuis & Visualisasi Konsep Fisika</title>
+    <title>FisikaLab Pro - Kuis Serentak & Visualisasi Konsep Fisika</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter -->
@@ -22,7 +22,7 @@
             </div>
             <div>
                 <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">FisikaLab Pro</h1>
-                <p class="text-xs text-slate-400">Eksplorasi Konsep & Visualisasi Realtime</p>
+                <p class="text-xs text-slate-400">Kuis Serentak & Visualisasi Realtime</p>
             </div>
         </div>
         <div id="status-koneksi" class="text-xs font-medium bg-emerald-500/10 text-emerald-400 px-3.5 py-1.5 rounded-full border border-emerald-500/20 flex items-center gap-2 shadow-sm">
@@ -37,8 +37,8 @@
         <!-- 1. Halaman Login / Masuk Ruangan -->
         <div id="screen-login" class="bg-slate-900/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-slate-800 transition-all duration-300">
             <div class="text-center mb-8">
-                <h2 class="text-3xl font-extrabold tracking-tight text-white mb-2">Uji Pemahaman Fisikamu</h2>
-                <p class="text-slate-400 text-sm">Masuk untuk memulai kuis interaktif dengan 20 soal konsep dasar hingga lanjutan beserta visualisasinya.</p>
+                <h2 class="text-3xl font-extrabold tracking-tight text-white mb-2">Uji Pemahaman Fisika Serentak</h2>
+                <p class="text-slate-400 text-sm">Masuk dengan kode ruangan yang sama agar seluruh peserta mulai mengerjakan soal secara serentak bersama waktu hitung mundur!</p>
             </div>
             <div class="space-y-5">
                 <div>
@@ -50,7 +50,7 @@
                     <input type="text" id="input-room" placeholder="Contoh: FISIKA01" class="w-full p-4 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition uppercase font-mono tracking-wider">
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3 pt-4">
-                    <button type="button" onclick="gabungRuangan()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold p-4 rounded-xl shadow-lg shadow-cyan-500/25 transition transform active:scale-95 cursor-pointer">Gabung Ruangan</button>
+                    <button type="button" onclick="gabungRuangan()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold p-4 rounded-xl shadow-lg shadow-cyan-500/25 transition transform active:scale-95 cursor-pointer">Gabung Ruangan Serentak</button>
                     <button type="button" onclick="buatRuangan()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold p-4 rounded-xl border border-slate-700 transition transform active:scale-95 cursor-pointer">Buat Ruangan Baru</button>
                 </div>
             </div>
@@ -58,19 +58,21 @@
 
         <!-- 2. Halaman Kuis & Visualisasi -->
         <div id="screen-quiz" class="hidden bg-slate-900/90 backdrop-blur-xl p-6 md:p-8 rounded-3xl shadow-2xl border border-slate-800">
-            <!-- Top Bar Kuis -->
+            <!-- Top Bar Kuis & Timer Serentak -->
             <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-slate-800 gap-3">
                 <div>
                     <span id="label-ruangan" class="text-xs font-mono uppercase bg-cyan-500/10 text-cyan-400 px-3 py-1 rounded-lg border border-cyan-500/20">Ruangan: -</span>
                     <span id="label-progress" class="text-xs text-slate-400 ml-2">Soal 1 dari 20</span>
                 </div>
-                <div class="flex items-center gap-3">
-                    <span class="text-xs text-slate-400">Skor Anda:</span>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full text-amber-400 font-mono text-xs font-bold">
+                        ⏱️ <span id="label-timer">15</span>d
+                    </div>
                     <span id="label-skor" class="text-base font-bold bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">0 Poin</span>
                 </div>
             </div>
             
-            <!-- Area Visualisasi Canvas 2D Konsep Fisika & Feedback Hore -->
+            <!-- Area Visualisasi Canvas 2D & Feedback Hore -->
             <div class="mb-6 bg-slate-950 rounded-2xl p-3 border border-slate-800 flex flex-col items-center shadow-inner relative overflow-hidden">
                 <div class="w-full flex justify-between items-center px-2 mb-2">
                     <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Visualisasi Konsep</span>
@@ -91,8 +93,8 @@
         <!-- 3. Halaman Papan Skor (Leaderboard) & Selesai -->
         <div id="screen-leaderboard" class="hidden bg-slate-900/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-slate-800 text-center">
             <div class="w-16 h-16 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg shadow-amber-500/10">🏆</div>
-            <h2 class="text-2xl font-bold mb-1 text-white">Kuis Selesai!</h2>
-            <p class="text-slate-400 text-sm mb-6">Berikut adalah hasil akhir pencapaian pemahaman konsep fisika Anda.</p>
+            <h2 class="text-2xl font-bold mb-1 text-white">Kuis Serentak Selesai!</h2>
+            <p class="text-slate-400 text-sm mb-6">Berikut adalah hasil pencapaian skor akhir Anda di ruangan kelas ini.</p>
             
             <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 mb-6 text-left">
                 <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Papan Skor Kelas</h4>
@@ -111,15 +113,78 @@
         FisikaLab Pro Educational Interactive System &copy; 2026
     </footer>
 
-    <!-- Script Logika Kuis & Visualisasi Canvas -->
+    <!-- Script Logika Kuis, Timer Serentak, & Audio Synthesizer -->
     <script>
         let playerNama = '';
         let currentRoom = '';
         let currentSkor = 0;
         let indexSoal = 0;
         let animationFrameId = null;
+        let timerInterval = null;
+        let timeLeft = 15;
+        let isAnswered = false;
 
-        // Data 20 Soal Lengkap Konsep Fisika & Fungsi Visualisasi Canvas
+        // --- SISTEM EFEK SUARA "HORE" & ERROR (WEB AUDIO API) ---
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playSoundHoree() {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                
+                // Melodi Hore Ceria Bertingkat (Arpeggio Gembira)
+                const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                notes.forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.07);
+
+                    gain.gain.setValueAtTime(0.25, now + i * 0.07);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.3);
+
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+
+                    osc.start(now + i * 0.07);
+                    osc.stop(now + i * 0.07 + 0.3);
+                });
+            } catch (e) { console.log("Audio Error:", e); }
+        }
+
+        function playSoundSalah() {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.3);
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } catch (e) { console.log("Audio Error:", e); }
+        }
+
+        // Data 20 Soal Konsep Fisika
         const daftarSoal = [
             {
                 soal: "Siapakah ilmuwan yang merumuskan Hukum Gravitasi Universal dan Hukum Gerak?",
@@ -170,13 +235,13 @@
                 visual: "energy_conservation"
             },
             {
-                soal: "Tekanan yang diberikan pada zat cair di dalam ruang tertutup akan diteruskan ke segala arah dengan sama besar, merupakan bunyi hukum...",
+                soal: "Tekanan yang diberikan pada zat cair di dalam ruang tertutup akan diteruskan ke segala arah dengan sama besar...",
                 opsi: ["Hukum Archimedes", "Hukum Pascal", "Hukum Boyle", "Hukum Newton"],
                 jawaban: 1,
                 visual: "pascal_law"
             },
             {
-                soal: "Gaya apung pada benda yang dicelupkan ke dalam zat cair sebanding dengan berat zat cair yang dipindahkan, merupakan bunyi...",
+                soal: "Gaya apung pada benda yang dicelupkan ke dalam zat cair sebanding dengan berat zat cair yang dipindahkan...",
                 opsi: ["Hukum Archimedes", "Hukum Pascal", "Hukum Hooke", "Hukum Coulomb"],
                 jawaban: 0,
                 visual: "archimedes"
@@ -188,7 +253,7 @@
                 visual: "vector_arrow"
             },
             {
-                soal: "Alat ukur yang memiliki tingkat ketelitian paling tinggi untuk mengukur diameter luar kelereng adalah...",
+                soal: "Alat ukur yang memiliki tingkat ketelitian tinggi untuk mengukur diameter luar kelereng adalah...",
                 opsi: ["Mistar / Penggaris", "Meteran gulung", "Jangka Sorong", "Neraca ohaus"],
                 jawaban: 2,
                 visual: "caliper"
@@ -244,6 +309,7 @@
         ];
 
         function buatRuangan() {
+            getAudioContext();
             const namaInput = document.getElementById('input-nama').value.trim();
             if (!namaInput) {
                 alert('Harap masukkan nama Anda terlebih dahulu!');
@@ -255,6 +321,7 @@
         }
 
         function gabungRuangan() {
+            getAudioContext();
             playerNama = document.getElementById('input-nama').value.trim();
             currentRoom = document.getElementById('input-room').value.trim().toUpperCase();
 
@@ -278,11 +345,11 @@
                 return;
             }
 
+            isAnswered = false;
             const item = daftarSoal[indexSoal];
             document.getElementById('label-progress').innerText = `Soal ${indexSoal + 1} dari ${daftarSoal.length}`;
             document.getElementById('teks-soal').innerText = item.soal;
             
-            // Render Visualisasi Canvas Sesuai Jenis Soal
             mulaiVisualisasi(item.visual);
 
             const containerOpsi = document.getElementById('opsi-jawaban');
@@ -297,27 +364,53 @@
                     <span class="w-6 h-6 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center text-xs text-slate-400 group-hover:border-cyan-500 group-hover:text-cyan-300 transition">${String.fromCharCode(65 + idx)}</span>
                 `;
                 btn.onclick = function() {
-                    pilihJawaban(idx, btn);
+                    if (!isAnswered) pilihJawaban(idx);
                 };
                 containerOpsi.appendChild(btn);
             });
+
+            // Mulai Hitung Mundur Serentak (15 Detik per Soal)
+            mulaiTimer();
         }
 
-        function pilihJawaban(idx, btnElement) {
+        function mulaiTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timeLeft = 15;
+            document.getElementById('label-timer').innerText = timeLeft;
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('label-timer').innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    if (!isAnswered) {
+                        // Waktu habis dianggap salah / lewat
+                        pilihJawaban(-1);
+                    }
+                }
+            }, 1000);
+        }
+
+        function pilihJawaban(idx) {
+            if (isAnswered) return;
+            isAnswered = true;
+            if (timerInterval) clearInterval(timerInterval);
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
 
             const item = daftarSoal[indexSoal];
             const isBenar = (idx === item.jawaban);
 
             if (isBenar) {
-                currentSkor += 5; // 20 soal x 5 = 100 poin
+                currentSkor += 5;
                 document.getElementById('label-skor').innerText = currentSkor + ' Poin';
+                playSoundHoree(); // Putar Suara Hore Seru!
                 tampilkanVisualFeedback(true);
             } else {
+                playSoundSalah();
                 tampilkanVisualFeedback(false);
             }
 
-            // Jeda sejenak untuk memperlihatkan animasi visual feedback sebelum lanjut ke soal berikutnya
             setTimeout(() => {
                 indexSoal++;
                 tampilkanSoal();
@@ -325,6 +418,7 @@
         }
 
         function selesaiKuis() {
+            if (timerInterval) clearInterval(timerInterval);
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
             document.getElementById('screen-quiz').classList.add('hidden');
             document.getElementById('screen-leaderboard').classList.remove('hidden');
@@ -336,13 +430,13 @@
                     <span class="font-bold text-amber-400">${currentSkor} Poin</span>
                 </div>
                 <div class="flex justify-between items-center bg-slate-900/60 p-3.5 rounded-xl border border-slate-800 text-slate-400 text-sm">
-                    <span>2. Peserta Lain (Simulasi Kelas)</span>
+                    <span>2. Peserta Kelas Serentak</span>
                     <span>${Math.max(0, currentSkor - 15)} Poin</span>
                 </div>
             `;
         }
 
-        // --- SISTEM VISUALISASI CANVAS & FEEDBACK HORE / SALAH ---
+        // --- VISUAL FEEDBACK & ANIMASI CANVAS ---
         let feedbackMode = false;
 
         function tampilkanVisualFeedback(benar) {
@@ -351,9 +445,8 @@
             const ctx = canvas.getContext('2d');
             const titleEl = document.getElementById('label-visual-title');
             
-            titleEl.innerText = benar ? "🎉 HORE! JAWABAN BENAR!" : "❌ Kurang Tepat!";
+            titleEl.innerText = benar ? "🎉 HORE! JAWABAN BENAR!" : "⏰ Waktu Habis / Kurang Tepat!";
             
-            let alpha = 1.0;
             let particles = [];
             if (benar) {
                 for (let i = 0; i < 40; i++) {
@@ -375,7 +468,7 @@
                 ctx.font = "bold 20px Inter, sans-serif";
                 ctx.fillStyle = benar ? "#34d399" : "#f87171";
                 ctx.textAlign = "center";
-                ctx.fillText(benar ? "+5 Poin! Kerja Bagus 🌟" : "Tetap Semangat, Coba Lagi! 💪", canvas.width / 2, canvas.height / 2 + 8);
+                ctx.fillText(benar ? "+5 Poin! Luar Biasa 🌟" : "Tetap Semangat, Lanjut Soal Berikutnya! 💪", canvas.width / 2, canvas.height / 2 + 8);
 
                 if (benar) {
                     particles.forEach(p => {
