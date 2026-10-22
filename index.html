@@ -70,8 +70,8 @@
                 </div>
             </div>
             
-            <!-- Area Visualisasi Canvas 2D Konsep Fisika -->
-            <div class="mb-6 bg-slate-950 rounded-2xl p-3 border border-slate-800 flex flex-col items-center shadow-inner">
+            <!-- Area Visualisasi Canvas 2D Konsep Fisika & Feedback Hore -->
+            <div class="mb-6 bg-slate-950 rounded-2xl p-3 border border-slate-800 flex flex-col items-center shadow-inner relative overflow-hidden">
                 <div class="w-full flex justify-between items-center px-2 mb-2">
                     <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Visualisasi Konsep</span>
                     <span id="label-visual-title" class="text-xs text-cyan-400 font-medium">Simulasi Fisika</span>
@@ -297,21 +297,31 @@
                     <span class="w-6 h-6 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center text-xs text-slate-400 group-hover:border-cyan-500 group-hover:text-cyan-300 transition">${String.fromCharCode(65 + idx)}</span>
                 `;
                 btn.onclick = function() {
-                    pilihJawaban(idx);
+                    pilihJawaban(idx, btn);
                 };
                 containerOpsi.appendChild(btn);
             });
         }
 
-        function pilihJawaban(idx) {
+        function pilihJawaban(idx, btnElement) {
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            
-            if (idx === daftarSoal[indexSoal].jawaban) {
-                currentSkor += 5; // Total 20 soal x 5 = 100 poin maksimal
+
+            const item = daftarSoal[indexSoal];
+            const isBenar = (idx === item.jawaban);
+
+            if (isBenar) {
+                currentSkor += 5; // 20 soal x 5 = 100 poin
                 document.getElementById('label-skor').innerText = currentSkor + ' Poin';
+                tampilkanVisualFeedback(true);
+            } else {
+                tampilkanVisualFeedback(false);
             }
-            indexSoal++;
-            tampilkanSoal();
+
+            // Jeda sejenak untuk memperlihatkan animasi visual feedback sebelum lanjut ke soal berikutnya
+            setTimeout(() => {
+                indexSoal++;
+                tampilkanSoal();
+            }, 1400);
         }
 
         function selesaiKuis() {
@@ -332,8 +342,59 @@
             `;
         }
 
-        // --- SISTEM VISUALISASI CANVAS 2D DINAMIS ---
+        // --- SISTEM VISUALISASI CANVAS & FEEDBACK HORE / SALAH ---
+        let feedbackMode = false;
+
+        function tampilkanVisualFeedback(benar) {
+            feedbackMode = true;
+            const canvas = document.getElementById('canvas-visual');
+            const ctx = canvas.getContext('2d');
+            const titleEl = document.getElementById('label-visual-title');
+            
+            titleEl.innerText = benar ? "🎉 HORE! JAWABAN BENAR!" : "❌ Kurang Tepat!";
+            
+            let alpha = 1.0;
+            let particles = [];
+            if (benar) {
+                for (let i = 0; i < 40; i++) {
+                    particles.push({
+                        x: canvas.width / 2,
+                        y: canvas.height / 2,
+                        vx: (Math.random() - 0.5) * 8,
+                        vy: (Math.random() - 0.5) * 8,
+                        color: ['#22d3ee', '#34d399', '#ffb020', '#a855f7'][Math.floor(Math.random() * 4)]
+                    });
+                }
+            }
+
+            function animFeedback() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = benar ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.font = "bold 20px Inter, sans-serif";
+                ctx.fillStyle = benar ? "#34d399" : "#f87171";
+                ctx.textAlign = "center";
+                ctx.fillText(benar ? "+5 Poin! Kerja Bagus 🌟" : "Tetap Semangat, Coba Lagi! 💪", canvas.width / 2, canvas.height / 2 + 8);
+
+                if (benar) {
+                    particles.forEach(p => {
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                        p.x += p.vx;
+                        p.y += p.vy;
+                    });
+                }
+
+                animationFrameId = requestAnimationFrame(animFeedback);
+            }
+            animFeedback();
+        }
+
         function mulaiVisualisasi(tipe) {
+            feedbackMode = false;
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
             const canvas = document.getElementById('canvas-visual');
             const ctx = canvas.getContext('2d');
@@ -346,11 +407,10 @@
                 let yPos = 30;
                 let velocity = 0;
                 function anim() {
+                    if (feedbackMode) return;
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    // Gambar lantai
                     ctx.fillStyle = '#1e293b';
                     ctx.fillRect(0, 160, canvas.width, 20);
-                    // Gambar objek jatuh
                     ctx.fillStyle = '#06b6d4';
                     ctx.beginPath();
                     ctx.arc(280, yPos, 14, 0, Math.PI * 2);
@@ -365,12 +425,11 @@
             } else if (tipe === 'force_vector') {
                 titleEl.innerText = "Simulasi Vektor Gaya (F = m × a)";
                 function anim() {
+                    if (feedbackMode) return;
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     let boxX = 60 + (frame % 300);
-                    // Kotak beban
                     ctx.fillStyle = '#6366f1';
                     ctx.fillRect(boxX, 70, 50, 50);
-                    // Panah gaya dorong
                     ctx.strokeStyle = '#22d3ee';
                     ctx.lineWidth = 4;
                     ctx.beginPath();
@@ -388,6 +447,7 @@
             } else {
                 titleEl.innerText = "Simulasi Gelombang & Energi";
                 function anim() {
+                    if (feedbackMode) return;
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     ctx.strokeStyle = '#38bdf8';
                     ctx.lineWidth = 3;
